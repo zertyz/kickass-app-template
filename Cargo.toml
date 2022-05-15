@@ -48,9 +48,10 @@ teloxide = { version = "0.9", features = ["macros", "auto-send"] }
 reqwest  = { version = "0.11", features = ["cookies", "gzip"] }
 
 # web API / UI
-rocket  = { version = "0.5.0-rc.1", features = ["json"] }
-tokio   = { version = "1", features = ["full", "rt-multi-thread"] }
-futures = { version = "0.3" }
+rocket      = { version = "0.5.0-rc.1", features = ["json"] }
+tokio       = { version = "1", features = ["full", "rt-multi-thread"] }
+futures     = { version = "0.3" }
+lazy_static = "1.4"                                                         # used to serve embedded files
 
 
 [dev-dependencies]
@@ -63,7 +64,8 @@ httpmock = "0"      # allows testing http client code
 # FRONTEND DEPENDENCY for Web Angular UI integration in build.rs
 walkdir = "2.3"
 flate2  = "1"      # gzip / gunzip
-#chrono  = "0"
+brotli  = "3.3"    # brotli compression
+chrono  = "0"
 
 
 # uncomment the bellow section to enable aggressive linking optimizations when compiling for release,

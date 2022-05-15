@@ -1,3 +1,5 @@
 export const environment = {
-  production: true
+  production: true,
+  ui_debug: false,
+  http_debug: false,
 };

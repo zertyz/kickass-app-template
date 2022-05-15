@@ -1,0 +1,37 @@
+<app-explorer-form [form]="{
+    service: '/api/get-service',
+    method: 'GET',
+    form_title: 'GET service page works!',
+    service_description: 'Please, fill in the form bellow:',
+    submit_label: 'Get it!',
+    fields: [
+      [
+        {
+          label: 'Conversion Direction',
+          name: 'conversion',
+          dataType: 'Text',
+          presentationType: 'RadioButtons',
+          required: true,
+          helperText: 'Conversion To/From',
+          possibleValues: [
+            {text: 'to Imperial', value: 'MetricToImperial'},
+            {text: 'to Metric',   value: 'ImperialToMetric'},
+          ]
+        },
+        {
+          label: 'Temperature (in °C or °F)',
+          name: 'from_temperature',
+          dataType: 'Number',
+          presentationType: 'Input',
+          helperText: 'Optional -- temperature (in °C or °F)'
+        },
+        {
+          label: 'Length (in meters or feet)',
+          name: 'from_length',
+          dataType: 'Number',
+          presentationType: 'Input',
+          helperText: 'Optional -- length (in meters or feet)'
+        },
+      ]
+    ]
+}"></app-explorer-form>

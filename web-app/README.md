@@ -6,13 +6,19 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
 
+`ng serve --host 0.0.0.0 --disable-host-check --proxy-config proxyconfig.json` may be used for advanced setups.
+
+
 ## Code scaffolding
 
 Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Run `npm run prerender` to build the project using universal pre-rendering.
+Look at `angular.json` for the routes that will participate on the pre-rendering.
+
+OR use the traditional method of running `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
 ## Running unit tests
 

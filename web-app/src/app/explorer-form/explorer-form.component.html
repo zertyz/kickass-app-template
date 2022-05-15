@@ -1,0 +1,86 @@
+<form [formGroup]="formGroup" novalidate (ngSubmit)="onSubmit()">
+  <mat-card class="shipping-card">
+    <mat-card-header>
+      <mat-card-title>{{form.form_title}}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <span>{{form.service_description}}</span>
+
+      <div class="row" *ngFor="let fieldSet of form.fields; index as i">
+        <div class="col"*ngFor="let field of fieldSet">
+          <!-- radio buttons & checkboxes must be out of a mat-form-field (which is just for text fields) -- https://stackoverflow.com/a/54461014/10297793 -->
+          <p *ngIf="field.presentationType == 'RadioButtons'; else checkBox">
+            <mat-radio-group formControlName="{{field.name}}">
+              <mat-radio-button *ngFor="let option of field.possibleValues" [value]="option.value" >{{option.text}}</mat-radio-button>
+            </mat-radio-group>
+          </p>
+          <ng-template #checkBox>
+            <mat-checkbox *ngIf="field.presentationType == 'CheckBox'; else standardField" matInput #{{field.name}} formControlName="{{field.name}}">{{field.label}}</mat-checkbox>
+          </ng-template>
+          <ng-template #standardField>
+            <mat-form-field class="full-width">
+              <input *ngIf="field.presentationType == 'Input'" matInput #{{field.name}} placeholder="{{field.label}}" formControlName="{{field.name}}">
+              <input *ngIf="field.presentationType == 'SteppedInput'" matInput #{{field.name}} maxlength="{{(''+field.upperBound).length}}}" placeholder="{{field.label}}" formControlName="{{field.name}}" type="number">
+              <textarea *ngIf="field.presentationType == 'Area'" matInput #{{field.name}} placeholder="{{field.label}}" formControlName="{{field.name}}"></textarea>
+              <mat-select *ngIf="field.presentationType == 'ComboBox'" #{{field.name}} placeholder="{{field.label}}" formControlName="{{field.name}}">
+                <mat-option *ngFor="let option of field.possibleValues" [value]="option.value">
+                  {{option.text}}
+                </mat-option>
+              </mat-select>
+              <!--<mat-hint align="end">{{field.name}}.value.length / 5</mat-hint>-->
+              <mat-error *ngIf="formGroup.controls[field.name].hasError('required')">
+                {{field.helperText}}
+              </mat-error>
+              <mat-error *ngIf="formGroup.controls[field.name].hasError('minlength')">
+                The minimum length is {{field.lowerBound}}
+              </mat-error>
+              <mat-error *ngIf="formGroup.controls[field.name].hasError('maxlength')">
+                The maximum length is {{field.upperBound}}
+              </mat-error>
+              <mat-error *ngIf="formGroup.controls[field.name].hasError('min')">
+                The minimum value is {{field.lowerBound}}
+              </mat-error>
+              <mat-error *ngIf="formGroup.controls[field.name].hasError('max')">
+                The maximum value is {{field.upperBound}}
+              </mat-error>
+              <mat-error *ngIf="environment.ui_debug && formGroup.controls[field.name].errors != null">
+                ERRORS: {{formGroup.controls[field.name].errors | json}}
+              </mat-error>
+            </mat-form-field>
+          </ng-template>
+        </div>
+      </div>
+
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!formGroup.valid">Submit</button>
+    </mat-card-actions>
+  </mat-card>
+</form>
+
+<div class="response-title" *ngIf="(backendData | keyvalue)?.length" class="json-headers-align">
+  <strong>Response:</strong>
+</div>
+<mat-accordion *ngIf="(backendData | keyvalue)?.length" class="json-headers-align" multi>
+  <mat-expansion-panel hideToggle *ngFor="let item of backendData | keyvalue">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        {{item.key}}
+      </mat-panel-title>
+      <mat-panel-description>
+        {{item.value}}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+    <pre>{{backendData | json}}</pre>
+  </mat-expansion-panel>
+</mat-accordion>
+
+<pre *ngIf="environment.ui_debug">
+Form will be built for:
+  FormGroup: {{formGroup.value | json}}
+  Service: '{{form.service}}',
+  Method: {{form.method}},
+  Fields: {{form.fields | json}}
+
+  formGroup model: {{formGroupModel | json}}
+</pre>

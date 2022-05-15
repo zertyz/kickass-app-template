@@ -1,0 +1,20 @@
+div#imageContainer {
+  background: #ccc;
+
+  height: 160px;
+  vertical-align: bottom;
+  display: table-cell;
+}
+
+#imageContainer img {
+  vertical-align: bottom
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.opened {
+  background: #774ab7;
+  opacity: 1;
+}

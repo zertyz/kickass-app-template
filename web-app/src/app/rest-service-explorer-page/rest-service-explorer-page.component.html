@@ -1,0 +1,22 @@
+<app-explorer-form [form]="{
+    service: '/api/rest-service/{world}',
+    method: 'REST',
+    form_title: 'REST service page works!',
+    service_description: 'Please, fill in the form bellow:',
+    submit_label: 'Rest it!',
+    fields: [
+      [{
+        label: 'World',
+        name: 'world',
+        dataType: 'Text',
+        presentationType: 'ComboBox',
+        required: true,
+        helperText: 'Greetings from where?',
+        possibleValues: [
+          {text:'Earth', value: 'Earth'},
+          {text:'Mars', value: 'Mars'},
+          {text:'Moon', value: 'Moon'},
+        ]
+      }]
+    ]
+}"></app-explorer-form>

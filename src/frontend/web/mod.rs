@@ -12,18 +12,18 @@
 //! ```
 //! ... which cannot be used, since the official way implies that a `main()` function will be written for you,
 
-mod planetpedia_api;
+mod files;
+mod embedded_files;
+mod api;
+mod backend;
 
-use rocket::{self, routes};
-
-/// the route for our logic api. Maybe you could rename it just to '/api' if you'll expose just one
-const API_BASE: &str = "/planetpedia_api/";
+use rocket;
 
 /// launches and rides the Rocket until the end
 pub async fn launch_rocket() -> Result<(), rocket::Error> {
     rocket::build()
-        .mount(API_BASE, routes![
-            planetpedia_api::index
-        ])
+        .mount(files::BASE_PATH,   files::routes())
+        .mount(api::BASE_PATH,     api::routes())
+        .mount(backend::BASE_PATH, backend::routes())
         .launch().await
 }
