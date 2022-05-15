@@ -1,0 +1,80 @@
+[package]
+name = "kickass-app-template"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+
+[dependencies]
+
+# FRONTEND DEPENDENCIES
+#######################
+
+log  = { version = "0.4", features = ["max_level_debug", "release_max_level_info"] }
+
+# default config loading & saving
+serde = { version = "1.0", features = ["derive"] }      # typed serialization / deserialization
+ron   = "0.7"                                           # .ron config files
+regex = "1.5"                                           # for placing docs along with config files
+
+# command-line parsing
+structopt    = "0.3"                                            # command line parsing
+strum        = { version = "0.24", features = ["derive"] }      # enums serialization/deserialization
+strum_macros = "0.24"
+
+# console UI
+slog-stdlog = "4"   # Facade between slog and Rust's standard 'log' api
+slog-scope  = "4"
+slog        = "2"
+sloggers    = "2"
+#simple_logger = {version = "2.1", features = ["stderr"]}  # a dirty console logger
+
+# terminal UI
+tui       = { version = "0.18", features = ['crossterm'] }
+crossterm = "0.23"  # from tui's Cargo.toml
+rand      = "0.8"
+
+# GUI
+eframe      = { version = "0.18", features = ["persistence"] }   # Gives us egui, epi and web+native backends, allowing it to save & load the UI state between runs
+egui_extras = { version = "0.18", features = ["svg"] }           # Additional widgets for egui: Images, Tables, ...
+rlottie     = "0.4.0"                                            # Lottie animations -- depends on 'rlottie' package from AUR
+rgb         = { version = "0.8.32", default-features = false }   # for rlottie pixel format conversions
+chrono      = "0"
+
+# telegram UI
+teloxide = { version = "0.9", features = ["macros", "auto-send"] }
+reqwest  = { version = "0.11", features = ["cookies", "gzip"] }
+
+# web API / UI
+rocket  = { version = "0.5.0-rc.1", features = ["json"] }
+tokio   = { version = "1", features = ["full", "rt-multi-thread"] }
+futures = { version = "0.3" }
+
+
+[dev-dependencies]
+ctor     = "0.1"    # setup and teardown for test modules
+httpmock = "0"      # allows testing http client code
+
+
+[build-dependencies]
+
+# FRONTEND DEPENDENCY for Web Angular UI integration in build.rs
+walkdir = "2.3"
+flate2  = "1"      # gzip / gunzip
+#chrono  = "0"
+
+
+# uncomment the bellow section to enable aggressive linking optimizations when compiling for release,
+# impacting positively the executable size & performance, at the cost of increasing building time.
+# optimizations gets at its peak when compiling with: RUSTFLAGS="-C target-cpu=native" cargo build --release
+# see https://deterministic.space/high-performance-rust.html
+[profile.release]
+strip = "symbols" # can be "none", "debuginfo", "symbols" (also strips debug info)
+debug-assertions = false
+overflow-checks = false
+lto = "fat"         # can be "fat", "thin", "off" (keep it off so PGO may work as of Rust 1.59 -- see https://github.com/rust-lang/rust/issues/90522)
+codegen-units = 1
+debug = false
+panic = "abort"     # disables stack traces / stack unwiding -- can be "unwind", "abort"
