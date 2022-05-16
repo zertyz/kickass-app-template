@@ -2,8 +2,7 @@
 //! For an improved version, microservice the design of this SMS framework may land some ideas: https://github.com/zertyz/InstantVAS-backend-java-opensource
 
 use crate::config::{
-    Config,
-    config_model::{Services, TelegramBotOptions},
+    config_model::{Config, TelegramConfig, TelegramBotOptions},
 };
 use std::{
     sync::Arc,
@@ -23,19 +22,13 @@ use log::{debug, info};
 
 /// starts a Telegram chat application, returning a shutdown callback (invoke it to initiate the shutdown sequence)
 pub async fn run(config: Arc<Config>) -> Box<dyn FnOnce() -> Pin<Box<dyn std::future::Future<Output = ()>>>> {
-    let telegram_config = &config.enabled_services.iter()
-        .filter_map(|service| if let Services::Telegram{token, bot} = service {
-            Some((token, bot))
-        } else {
-            None
-        })
-        .next();
-    let shutdown_token = if let Some((token, bot)) = telegram_config {
-        Some(match bot {
-            TelegramBotOptions::Dice      => dice_bot(&token).await,
-            TelegramBotOptions::Stateless => stateless_commands(&token).await,
-            TelegramBotOptions::Stateful  => stateful_commands(&token).await,
-        })
+    let shutdown_token = if let Some(telegram_config) = &config.services.telegram {
+        let shutdown_token = match telegram_config.bot {
+            TelegramBotOptions::Dice      => dice_bot(&telegram_config.token).await,
+            TelegramBotOptions::Stateless => stateless_commands(&telegram_config.token).await,
+            TelegramBotOptions::Stateful  => stateful_commands(&telegram_config.token).await,
+        };
+        Some(shutdown_token)
     } else {
         None
     };

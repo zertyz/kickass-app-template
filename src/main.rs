@@ -82,20 +82,21 @@ fn start_tokio_runtime_and_apps(config: Arc<Config>, worker_threads: usize) -> J
             .build()
             .unwrap()
             .block_on(async {
-                let config = Arc::clone(&config);
                 let t1 = tokio::spawn(async {
                     debug!("    running 'custom_async_initialization()'...");
                     custom_async_initialization().await
                         .map_err(|err| format!("Couldn't run 'custom_async_initialization()' function from main: {}", err))
                         .unwrap();
                 });
-                let t2 = tokio::spawn(async move {
+                let config_for_telegram = Arc::clone(&config);
+                let t2 = tokio::spawn(async {
                     debug!("    starting Telegram UI service...");
-                    let _shutdown_telegram = frontend::telegram::run(Arc::clone(&config)).await;
+                    let _shutdown_telegram = frontend::telegram::run(config_for_telegram).await;
                 });
+                let config_for_rocket   = Arc::clone(&config);
                 let t3 = tokio::spawn(async {
                     debug!("    starting Rocket Web service...");
-                    frontend::web::launch_rocket().await
+                    frontend::web::launch_rocket(config_for_rocket).await
                         .map_err(|err| format!("Couldn't start Rocket: {}", err))
                         .unwrap();
                 });

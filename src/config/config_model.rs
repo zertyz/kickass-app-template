@@ -14,12 +14,12 @@ use serde::{Serialize,Deserialize};
 pub struct Config {
     /// The UI that should be used to run the application
     pub ui: UiOptions,
-    /// Which services should be enabled?
-    pub enabled_services: Vec<Services>,
     /// Specifies what the application should do with it's log messages
     pub log: LoggingOptions,
     /// Specifies what parallelization policy applicable algorithms should use
     pub parallelization: ParallelizationOptions,
+    /// Services (and their configs) to be enabled
+    pub services: ServicesConfig,
 }
 
 /// UI options -- how should we present the application progress to the user?
@@ -37,35 +37,45 @@ pub enum UiOptions {
     Egui,
 }
 
-/// Available services
 #[derive(Debug,Serialize,Deserialize)]
-pub enum Services {
-    /// The telegram service
-    Telegram {
-        /// Telegram's bot token, obtained from "BotFather's" bot:
-        /// 1) Open TelegramApp and search for BotFather
-        /// 2) Send /newbot (or /help)
-        token: String,
-        /// The bot to use
-        bot: TelegramBotOptions,
-    },
-    /// The HTTP/HTTPS service
-    Rocket {
-        /// Port to listen to HTTP connections
-        http_port:  u16,
-        /// Port to listen to HTTPS connections
-        https_port: u16,
-        /// If set, exposes the HTTP/HTTPS API at the given path -- Some("/api"), for instance
-        http_api: Option<String>,
-        /// If set, exposes (at the given path) the built-in Angular app + related static files
-        /// & related backend services
-        angular_app: Option<String>,
-        /// If set, exposes (at the given path) the built-in statistics dashboard (also made in Angular) +
-        /// related static files & related backend services
-        stats_app: Option<String>,
-        /// How many async tasks should be created to process the incoming requests?
-        workers: u16,
-    },
+pub struct ServicesConfig {
+    pub telegram: Option<TelegramConfig>,
+    pub web:      Option<WebConfig>,
+}
+
+/// The telegram service
+#[derive(Debug,Serialize,Deserialize)]
+pub struct TelegramConfig {
+    /// Telegram's bot token, obtained from "BotFather's" bot:
+    /// 1) Open TelegramApp and search for BotFather
+    /// 2) Send /newbot (or /help)
+    pub token: String,
+    /// The bot to use
+    pub bot: TelegramBotOptions,
+}
+
+/// The HTTP/HTTPS service
+#[derive(Debug,Serialize,Deserialize)]
+pub struct WebConfig {
+    /// The Rocket profile to use as basis for `rocket_config`
+    pub profile: RocketProfiles,
+    /// Rocket config details
+    pub rocket_config: RocketConfigOptions,
+    /// If set, enables [crate::frontend::web::sanity_check] routes -- allowing this executable to be probed for it's running sanity
+    pub sanity_check_routes: bool,
+    /// If set, enables [crates::frontend::web::stats] routes -- exposing runtime metrics
+    pub stats_routes: bool,
+    /// If set, enables [crates::frontend::web::logs_following] routes -- exposing online logs for the app
+    pub logs_following_routes: bool,
+    /// If set, enables [crates::frontend::web::ogre_events_following] routes -- exposing online `Ogre Events` for the app
+    pub ogre_events_following_routes: bool,
+    /// If set, enables [crates::frontend::web::ogre_events_queue] routes -- exposing `Ogre Events` designed to be consumed by external services
+    pub ogre_events_queue_routes: bool,
+    /// If set, enables the Angular application present in `web-app/`, exposing it's [crate::frontend::web::backend]
+    /// routes and all related static files (see [crate::frontend::web::embedded_files])
+    pub web_app: bool,
+    /// Prepends the given string to all our HTTP/HTTPS routes
+    pub routes_prefix: String,
 }
 
 /// Available bots to handle Telegram interaction
@@ -77,6 +87,31 @@ pub enum TelegramBotOptions {
     Stateless,
     /// Chat-like robot, holding dialog context. Send it anything to start the conversations
     Stateful,
+}
+
+/// Rocket requires us to inform in which "environment" we're running.\
+/// If you use the [RocketConfigOptions::StandardRocketTomlFile] variant, each section
+/// must be present on the file.
+#[derive(Debug,Serialize,Deserialize)]
+pub enum RocketProfiles {
+    Debug,
+    Production,
+}
+
+/// Available Rocket configuration possibilities
+#[derive(Debug,Serialize,Deserialize)]
+pub enum RocketConfigOptions {
+    /// Instructs Rocket to read configs from it's `Rocket.toml` file. Notice that Rocket will look
+    /// for such file in the current working directory, rather than on the executable's location.
+    StandardRocketTomlFile,
+    /// When using use only HTTP, using this variant may be desireable, as it avoids the need of managing
+    /// another configuration file: `Rocket.toml` -- Rocket's config.
+    Provided {
+        /// Port to listen to HTTP connections
+        http_port:  u16,
+        /// How many async tasks should be created to process the incoming requests?
+        workers: u16,
+    }
 }
 
 /// Logging options -- what to do with log messages
@@ -117,22 +152,28 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             ui:              UiOptions::Automatic,
-            enabled_services: vec![
-                Services::Telegram {
-                    token: String::from("<<Open TelegramApp, search for BotFather, send /newbot>>"),
-                    bot: TelegramBotOptions::Dice,
-                },
-                Services::Rocket {
-                    http_port: 8080,
-                    https_port: 8888,
-                    http_api: Some(String::from("/api")),
-                    angular_app: Some(String::from("/app")),
-                    stats_app: Some(String::from("/stats")),
-                    workers: 1
-                },
-            ],
             log:             LoggingOptions::ToConsole,
             parallelization: ParallelizationOptions::On{n_tasks: 0},
+            services:        ServicesConfig {
+                telegram: Some(TelegramConfig {
+                    token: String::from("<<Open TelegramApp, search for BotFather, send /newbot>>"),
+                    bot: TelegramBotOptions::Dice,
+                }),
+                web: Some(WebConfig {
+                    profile: RocketProfiles::Debug,
+                    rocket_config: RocketConfigOptions::Provided {
+                        http_port: 8000,
+                        workers:   1,
+                    },
+                    sanity_check_routes:          false,
+                    stats_routes:                 false,
+                    logs_following_routes:        false,
+                    ogre_events_following_routes: false,
+                    ogre_events_queue_routes:     false,
+                    web_app:                      true,
+                    routes_prefix: "".to_string()
+                }),
+            },
         }
     }
 }
