@@ -1,12 +1,13 @@
 # Production-ready seed & template for Rust Backend & Long Runner Applications
 
-This repository presents a seed for creating backend Rust applications, with bundled libs, UIs, services & patterns.
+This repository presents a seed for creating backend Rust applications -- with bundled libs, UIs, services & design patterns.
 
 Most likely you'll need only a subset of the features provided by this template:
    1. Services:
-      - [X] Web, through `Rocket` -- with embedded static files, including an Angular app
+      - [X] Web, through `Rocket`
+         - [X] embedded static & pre-compressed files -- including an Angular app -- for blazing fast speeds
       - [X] Telegram, through `Teloxide` -- stateless & stateful examples
-         - [ ] standalone message sending
+         - [ ] application initiated message sending
       - [X] Hooks for your own Service
          - [X] async with `Tokio`
    2. UIs:
@@ -14,23 +15,25 @@ Most likely you'll need only a subset of the features provided by this template:
       - [X] Terminal --  `tui` + `crossterm`;
       - [X] GUI -- `egui`
          - [X] `lottie` animations with `rlottie`
-         - [ ] graphics with `plotters`
-      - [X] Angular + Angular Universal, embedding all static files into the executable
-         - [X] Angular Universal for blazing fast loading speeds of ~50ms
-         - [X] Google Material theming
-         - [X] example app to test the provided web services in `src/frontend/web/api`
+         - [ ] charts with `plotters`
+      - [X] Integrated & embedded Angular application
+         - [X] Angular Universal, automatically pre-rendering parameter-less routes
+         - [X] Google Material theming & components
+         - [X] Example app to test the web services provided in `src/frontend/web/api`, with flexible components
+         - [X] Loading speeds of ~50ms, enabling it to be used as landing pages
    3. Configs:
       - [X] Application-wide `config pattern` tying all features together + customizable to include your business logic
       - [X] Command Line parsing through `structopt`, merging with the application-wide configs
-      - [X] Persistent config file using `ron`
+      - [X] Persistent config file using `ron` -- easily serializing any Rust type + automated DOCs generation
 
 # How to use it
 
    * Click `Use this template`, at the top right of this github page;
-   * Edit `Cargo.toml` and remove the dependencies you don't need + associated code failing to compile;
-   * Remodel `src/config` module to your needs
-   * Add your business logic modules
-   * Inspect & update the `src/frontend` module
+   * Edit `Cargo.toml` and clean it up from the dependencies you don't need + associated code, then, failing to compile;
+   * Remodel `src/config` & `src/command_line` modules to your needs
+   * Add all modules for your business logic
+   * Inspect & adjust the `src/frontend` module & submodules
+   * Share back (through a PR) any improvements you do to the template
 
 
 # Screenshots
