@@ -8,6 +8,7 @@ Most likely you'll need only a subset of the features provided by this template:
          - [X] embedded static & pre-compressed files -- including an Angular app -- for blazing fast speeds
       - [X] Telegram, through `Teloxide` -- stateless & stateful examples
          - [ ] application initiated message sending
+         - [ ] messaging framework inspired on InstantVAS' Microservice pattern
       - [X] Hooks for your own Service
          - [X] async with `Tokio`
    2. UIs:
