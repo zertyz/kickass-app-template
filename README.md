@@ -32,12 +32,26 @@ Most likely you'll need only a subset of the features provided by this template:
    * Add your business logic modules
    * Inspect & update the `src/frontend` module
 
+
 # Screenshots
 
 ## Angular
-
 ![rust+angular+material 1.png](screenshots/rust+angular+material%201.png)
 ![rust+angular+material 2.png](screenshots/rust+angular+material%202.png)
 (only 44ms needed to show the content -- 13ms to load index.html + 31ms to render it. After being presented, Angular is loaded and after 664ms we have a fully working website)
 
-![rust+angular+Pingdom+results.png](screenshots/rust+angular+Pingdom+results.png)
+## Terminal
+![terminal-ui.png](screenshots/terminal-ui.png)
+
+## EGui
+![egui-fractal-clock-example.png](screenshots/egui-fractal-clock-example.png)
+![egui-lottie-animations.jpg](screenshots/egui-lottie-animations.jpg)
+
+## Telegram
+![telegram-bot.png](screenshots/telegram-bot.png)
+
+## Command-Line options example
+![command-line-examples.png](screenshots/command-line-examples.png)
+
+## Config .ron example
+![command-line-examples.png](screenshots/command-line-examples.png)

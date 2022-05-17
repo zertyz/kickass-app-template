@@ -109,7 +109,7 @@ pub enum RocketConfigOptions {
     Provided {
         /// Port to listen to HTTP connections
         http_port:  u16,
-        /// How many async tasks should be created to process the incoming requests?
+        /// How many tokio async tasks should be used to process the incoming requests?
         workers: u16,
     }
 }
@@ -121,7 +121,7 @@ pub enum LoggingOptions {
     Quiet,
     /// Output them to stdout
     ToConsole,
-    /// Save them to the specified file
+    /// Save them to the specified file, with the specified options:
     ToFile {
         /// File to use a basis for rotation or appending
         file_path: String,
