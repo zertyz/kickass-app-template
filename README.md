@@ -54,4 +54,4 @@ Most likely you'll need only a subset of the features provided by this template:
 ![command-line-examples.png](screenshots/command-line-examples.png)
 
 ## Config .ron example
-![command-line-examples.png](screenshots/command-line-examples.png)
+![config-example.png](screenshots/config-example.png)
