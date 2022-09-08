@@ -1,5 +1,5 @@
 [package]
-name = "ogre-robot-gateway"
+name = "kickass-app-template"
 version = "0.1.0"
 edition = "2021"
 
@@ -19,6 +19,8 @@ tcmalloc_allocator         = ["tcmalloc/default"]       # fastest for multi-thre
 tcmalloc_allocator_bundled = ["tcmalloc/bundled"]       # this one uses tcmalloc's implementation of it's required lib
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
 
 [dependencies]
 
