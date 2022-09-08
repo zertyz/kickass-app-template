@@ -1,4 +1,4 @@
-//! build.rs: keeps static files to be served inside the main executable, allowing for blazing-fast service (without context switches nor cache manipulations)
+//! build.rs: keeps static files to be served inside the main executable, allowing for blazing-fast answers (without context switches nor cache manipulations)
 #![allow(dead_code)]
 
 use std::{
@@ -16,14 +16,35 @@ use chrono::{DateTime, Utc};
 
 // ---------------------------------- CONFIGURATION START ----------------------------------
 
-/// the Angular app name, as created in 'dist/' when building the app
-const ANGULAR_APP_NAME: &str = "kickass-app-template";
-
-/// should we build a regular Angular site or a blazing fast pre-rendered, universal one?
-const ANGULAR_BUILD_TYPE: AngularBuildTypes = AngularBuildTypes::PreRenderedUniversal;
-
 /// which compressor to use to serve the static files
 const COMPRESSOR: Compressors = Compressors::GZip;
+
+/// files listed here won't be embedded
+const EXCLUDED_FILES_LIST: &[&str] = &["/3rdpartylicenses.txt"];
+
+// web-app
+//////////
+
+/// the dir name where the angular app is located at -- in relation to the project's root
+const ANGULAR_WEB_APP_DIR_NAME: &str = "web-app";
+
+/// the Angular web app name, as created in 'web-app/dist/' when building `web-app`
+const ANGULAR_WEB_APP_NAME: &str = "kickass-app-template";
+
+/// for the `web-app/`, should we build a regular Angular site or a blazing fast pre-rendered, universal one?
+const ANGULAR_WEB_APP_BUILD_TYPE: AngularBuildTypes = AngularBuildTypes::PreRenderedUniversal;
+
+// web-stats
+////////////
+
+/// the dir name where the angular app is located at -- in relation to the project's root
+const ANGULAR_WEB_STATS_DIR_NAME: &str = "web-stats";
+
+/// the Angular stats app name, as created in 'web-stats/dist/' when building `web-stats`
+const ANGULAR_WEB_STATS_NAME: &str = "coreui-free-angular-admin-template";
+
+/// for the `web-stats/`, should we build a regular Angular site or a blazing fast pre-rendered, universal one?
+const ANGULAR_WEB_STATS_BUILD_TYPE: AngularBuildTypes = AngularBuildTypes::Regular;
 
 // ----------------------------------- CONFIGURATION END -----------------------------------
 
@@ -31,7 +52,7 @@ const COMPRESSOR: Compressors = Compressors::GZip;
 const COMPRESSION_THRESHOLD: usize = 100;
 
 /// builds a production-ready website using regular Angular scripts
-const REGULAR_ANGULAR_BUILD_COMMAND: &str = "ng build --aot --build-optimizer --optimization --prod --progress";
+const REGULAR_ANGULAR_BUILD_COMMAND: &str = "ng build --aot --build-optimizer --optimization --progress";
 
 /// builds a production-ready website + dynamic server (which is not used by us, for we only care for URL parameter-less routes)
 /// -- look at 'angular.json' for which routes will participate on the pre-rendering
@@ -68,6 +89,7 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=web-app/src");
+    println!("cargo:rerun-if-changed=web-stats/src");
 }
 
 fn on_non_release() {
@@ -82,18 +104,67 @@ fn on_non_release() {
     );
 }
 
-/// builds the angular site for production, then loads (and compresses) the resulting static files, storing them in a hash map for use by the application.
+/// builds the angular applications, merges the files (checking for name clashes) and save them in the embedded form
 fn on_release() {
-    eprintln!("\tBuilding the Angular application:");
-    let angular_relative_path = "./web-app";
-    let angular_dist_path = format!("{}/dist/{}/browser", angular_relative_path, ANGULAR_APP_NAME);
-    let angular_build_command = match ANGULAR_BUILD_TYPE {
-        AngularBuildTypes::PreRenderedUniversal => PRE_RENDERED_UNIVERSAL_BUILD_COMMAND,
-        AngularBuildTypes::Regular =>              REGULAR_ANGULAR_BUILD_COMMAND,
-    };
+    let mut merged_static_files = HashMap::<String, Vec<u8>>::new();
+    let mut merged_links         = HashMap::<String, String>::new();
+    for (angular_dir, angular_app_name, build_type, root_index_html_rename) in [
+        (ANGULAR_WEB_APP_DIR_NAME,   ANGULAR_WEB_APP_NAME,   ANGULAR_WEB_APP_BUILD_TYPE,   "/index.html"),
+        (ANGULAR_WEB_STATS_DIR_NAME, ANGULAR_WEB_STATS_NAME, ANGULAR_WEB_STATS_BUILD_TYPE, "/stats")
+    ] {
+        let (mut static_files, mut links) = build_and_embed_angular_app(angular_dir, angular_app_name, build_type, root_index_html_rename);
+        eprintln!("\t\tstatic_files: {:?}", static_files.iter().map(|(file_name, _)| file_name).collect::<Vec<_>>());
+        eprintln!("\t\tlinks: {:?}", links);
+        // merge files
+        static_files
+            .drain()
+            .for_each(|(file_name, file_contents)| {
+                if merged_static_files.contains_key(&file_name) {
+                    panic!("BUG: {} attempted to overwrite static file '{}'", angular_dir, &file_name);
+                } else {
+                    merged_static_files.insert(file_name, file_contents);
+                }
+            });
+        links
+            .drain()
+            .for_each(|(source, target)| {
+                if merged_links.contains_key(&source) {
+                    if source == "/" {
+                        eprintln!("\t\tWarning: ignoring link to / (it already exists)");
+                    } else {
+                        panic!("BUG: {} attempted to overwrite link to source '{}'", angular_dir, &source);
+                    }
+                } else {
+                    merged_links.insert(source, target);
+                }
+            });
+    }
+    eprintln!("\tSaving & compressing {} files & {} links into embedded_files.rs...", merged_static_files.len(), merged_links.len());
+    save_static_files(merged_static_files, merged_links);
+}
+
+/// builds the angular site for production, then loads (and compresses) the resulting static files, storing them in a hash map for use by the application.
+fn build_and_embed_angular_app(angular_dir_name:       &str,
+                               angular_app_name:       &str,
+                               build_type:             AngularBuildTypes,
+                               root_index_html_rename: &str) -> (HashMap<String, Vec<u8>>, HashMap<String, String>) {
+    eprintln!("\tBuilding the Angular application in `{}`:", angular_dir_name);
+    let angular_relative_path = format!("./{}", angular_dir_name);
+    let angular_dist_path;
+    let angular_build_command;
+    match build_type {
+        AngularBuildTypes::PreRenderedUniversal => {
+            angular_dist_path = format!("{}/dist/{}/browser", angular_relative_path, angular_app_name);
+            angular_build_command = PRE_RENDERED_UNIVERSAL_BUILD_COMMAND;
+        },
+        AngularBuildTypes::Regular => {
+            angular_dist_path = format!("{}/dist/{}", angular_relative_path, angular_app_name);
+            angular_build_command = REGULAR_ANGULAR_BUILD_COMMAND;
+        },
+    }
     let full_build_command = format!("cd '{}' && {}", angular_relative_path, angular_build_command);
     let get_angular_routes_command = format!(r#"grep "{{ path: '" {}/src/app/app-routing.module.ts | sed "s|.* path: '\([^']*\)'.*|\1|""#, angular_relative_path);
-    let shell = if cfg!(target_os = "windows") {"cmd"} else {"sh"};
+    let shell = if cfg!(target_os = "windows") { "cmd" } else { "sh" };
 
     eprintln!("\t\tGetting Angular routes...");
     let output = Command::new(shell)
@@ -103,7 +174,7 @@ fn on_release() {
     let angular_routes_output = String::from_utf8(output).expect("command output is not in UTF-8");
     let angular_routes = angular_routes_output.split("\n");
 
-    eprintln!("\t\tRunning Angular's production build: {:?} ==> '{}'", ANGULAR_BUILD_TYPE, full_build_command);
+    eprintln!("\t\tRunning Angular's production build: {:?} ==> '{}'", build_type, full_build_command);
     let _exit_status = Command::new(shell)
         .args(["-c", &full_build_command])
         .spawn().expect(&format!("Failed to start Angular UI build command '{}'", full_build_command))
@@ -128,20 +199,29 @@ fn on_release() {
             if metadata.is_file() {
                 let file_contents = fs::read(&entry.path()).expect(&format!("Cannot read file contents: '{:?}'", entry));
                 let relative_file_name = entry.path().to_string_lossy().to_string().replace(root_dir.to_str().unwrap(), "");
-                files_contents.insert(relative_file_name, file_contents);
+                // rename "/index.html" -- from this point on, it will look as if /index.html was simply renamed on the filesystem
+                let relative_file_name = if relative_file_name == "/index.html" {
+                    root_index_html_rename.to_string()
+                } else {
+                    relative_file_name
+                };
+                // include the file, if not on the exclusion's list
+                if !EXCLUDED_FILES_LIST.iter().any(|&exclude| relative_file_name == exclude) {
+                    files_contents.insert(relative_file_name, file_contents);
+                }
             }
         });
 
     // includes all angular routes as links to index.html
     // -- for universal builds, they'll be linked to 'index.original.html' and the pre-rendered
     //    routes will be overwritten by the corresponding pre-rendered file
-    let dynamic_routes_index_name = match ANGULAR_BUILD_TYPE {
+    let dynamic_routes_index_name = match build_type {
         AngularBuildTypes::PreRenderedUniversal => "index.original.html",
-        AngularBuildTypes::Regular => "index.html",
+        AngularBuildTypes::Regular              => "index.html",
     };
     eprintln!("\tLinking '/{}' to all dynamic Angular routes", dynamic_routes_index_name);
     let mut file_links: HashMap<String, String> = angular_routes.into_iter()
-        .map(|route| (format!("/{}", route), format!("/{}", dynamic_routes_index_name)) )
+        .map(|route| (format!("/{}", route), format!("/{}", dynamic_routes_index_name)))
         .collect();
 
     // allows automatic dir -> dir/index.html access -- pre-rendered routes uses this mechanism
@@ -157,7 +237,7 @@ fn on_release() {
         }
     }
 
-    save_static_files(files_contents, file_links);
+    (files_contents, file_links)
 }
 
 /// saves (possibly compressing) 'static_files' into a const hash map for use by the web server & application when

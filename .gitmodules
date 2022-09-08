@@ -1,0 +1,3 @@
+[submodule "web-stats"]
+	path = web-stats
+	url = https://github.com/coreui/coreui-free-angular-admin-template.git

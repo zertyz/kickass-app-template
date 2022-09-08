@@ -3,21 +3,55 @@ name = "kickass-app-template"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = [
+                                 # we're using the default allocator for now, as it works better in low memory environments
+    #"tcmalloc_allocator"        # the fastest allocator, according to features.rs (go measure it again, from time to time)
+]
+
+dox = ["ctor"]                      # allows test module setups functions
+
+# Allocators
+std_allocator              = []
+mimalloc_allocator         = ["mimalloc"]
+jemallocator_allocator     = ["jemallocator"]
+tcmalloc_allocator         = ["tcmalloc/default"]       # fastest for multi-threaded algorithms, even if it uses a little bit more RAM (even on heavy swapping scenarios) -- requires libs provided by system package 'gperftools'
+tcmalloc_allocator_bundled = ["tcmalloc/bundled"]       # this one uses tcmalloc's implementation of it's required lib
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
 
 [dependencies]
 
-# FRONTEND DEPENDENCIES
-#######################
 
-log  = { version = "0.4", features = ["max_level_debug", "release_max_level_info"] }
+# KICKASS-APP-TEMPLATE DEPENDENCIES
+###################################
+
+# global allocators -- enabled by features -- see features.rs
+jemallocator = { version = "0.3", optional = true }
+mimalloc     = { version="0.1", optional = true }
+tcmalloc     = { version="0.3", default-features = false, optional = true }
+# other interesting allocators:
+# scudo - focused on heap security (prevents heap exploitation by unsafe / external code)
+
+log         = { version = "0.4", features = ["max_level_debug", "release_max_level_info"] }
+parking_lot = "0.12"    # high performance Mutexes
 
 # default config loading & saving
-serde = { version = "1.0", features = ["derive"] }      # typed serialization / deserialization
-ron   = "0.7"                                           # .ron config files
-regex = "1.5"                                           # for placing docs along with config files
+serde      = { version = "1.0", features = ["derive"] }      # typed serialization / deserialization
+ron        = "0.7"                                           # .ron config files
+regex      = "1.5"                                           # for placing docs along with config files
+owning_ref = "0.4.1"                                         # allows Arcs to be used for internal references
+
+# metrics
+minstant       = "0.1"  # (real) time measurements through RDTSC instruction (without calling the Kernel / without causing a context switch)
+# low overhead, ergonomical metrics gathering
+metered           = { version = "0.8", features = [ "error-count-skip-cleared-by-default" ] }
+hdrhistogram      = "7.5"   # low-latency, high-range histograms
+#atomic           = "0.5"   # native atomic instructions for generic T: Copy types (or fallback, if atomic instr is not possible)
+#serde_prometheus = "0.1"   # serde-based serializer for prometheus' text-based exposition format
+#thiserror        = "1.0"   # macros for making enum variants to implement the Error trait -- for libs
 
 # command-line parsing
 structopt    = "0.3"                                            # command line parsing
@@ -48,15 +82,22 @@ teloxide = { version = "0.9", features = ["macros", "auto-send"] }
 reqwest  = { version = "0.11", features = ["cookies", "gzip"] }
 
 # web API / UI
-rocket      = { version = "0.5.0-rc.1", features = ["json"] }
+rocket      = { version = "0.5.0-rc.2", features = ["json"] }
 tokio       = { version = "1", features = ["full", "rt-multi-thread"] }
 futures     = { version = "0.3" }
-lazy_static = "1.4"                                                         # used to serve embedded files
+lazy_static = "1.4"    # used when serving embedded files
+
+# doc dependencies
+##################
+
+ctor = { version = "0.1", optional = true }
 
 
 [dev-dependencies]
-ctor     = "0.1"    # setup and teardown for test modules
-httpmock = "0"      # allows testing http client code
+ctor          = "0.1"    # setup and teardown for test modules
+simple_logger = "2.1"    # a dirty console logger
+httpmock      = "0"      # allows testing http client code
+big-o-test    = "0.2"    # enforce algorithm's maximum allowed complexity
 
 
 [build-dependencies]

@@ -17,16 +17,34 @@ mod embedded_files;
 mod api;
 mod backend;
 
-use crate::config::config_model::{self, RocketConfigOptions, RocketProfiles};
+use crate::config::config::{Config, WebConfig, RocketConfigOptions, RocketProfiles};
 use std::{
     sync::Arc,
     net::Ipv4Addr,
 };
+use owning_ref::OwningRef;
+use futures::future::BoxFuture;
 use rocket;
 
-/// launches and rides the Rocket until the end
-pub async fn launch_rocket(config: Arc<config_model::Config>) -> Result<(), rocket::Error> {
-    if let Some(web_config) = &config.services.web {
+
+/// Returned by this module when the Rocket server starts -- see [runner()].\
+/// Used to, programmatically, interact with the Rocket server:
+///  * inquire if the server is running
+///  * request the server to shutdown
+pub struct WebServer {
+    /// runtime configs for this server
+    web_config: OwningRef<Arc<Config>, WebConfig>,
+    /// tells if the service is fully started & working
+    started: bool,
+    /// contains the builder for Rocket -- which exists between [new()] and [runner()] calls
+    rocket_builder: Option<rocket::Rocket<rocket::Build>>,
+    /// if present, exposes the Rocket's `shutdown_token`, through which one may request the service to cease running
+    pub shutdown_token: Option<rocket::Shutdown>,
+}
+
+impl WebServer {
+
+    pub fn new(web_config: OwningRef<Arc<Config>, WebConfig>) -> WebServer {
         let mut rocket_builder = match web_config.rocket_config {
             RocketConfigOptions::StandardRocketTomlFile => rocket::build(),
             RocketConfigOptions::Provided {http_port, workers} =>
@@ -37,12 +55,43 @@ pub async fn launch_rocket(config: Arc<config_model::Config>) -> Result<(), rock
                 .mount(files::BASE_PATH,   files::routes())
                 .mount(backend::BASE_PATH, backend::routes());
         }
-        rocket_builder
-            .mount(api::BASE_PATH,     api::routes())
-            .launch().await
-    } else {
-        Ok(())
+        Self {
+            web_config,
+            started: false,
+            rocket_builder: Some(rocket_builder),
+            shutdown_token: None,
+        }
     }
+
+    /// returns a runner, which you may call to run Rocket and that will only return when
+    /// the service is over -- this special semantics allows holding the mutable reference to `self`
+    /// as little as possible.\
+    /// Example:
+    /// ```no_compile
+    ///     self.runner()().await;
+    pub async fn runner<'r>(&mut self) -> Result<impl FnOnce() -> BoxFuture<'r, Result<(),
+                                                                                       Box<dyn std::error::Error + Send + Sync>>> + Send + 'r,
+                                                 Box<dyn std::error::Error + Send + Sync>> {
+
+        let ignited_rocket = self.rocket_builder.take().expect("BUG: web.rs: rocket_builder is empty")
+            .mount(api::BASE_PATH, api::routes())
+            .ignite().await
+            .map_err(|err| format!("Error 'Ignite'ing rocket: {:?}", err))?;
+
+        self.shutdown_token = Some(ignited_rocket.shutdown());
+
+        let runner = move || -> BoxFuture<'_, Result<(), Box<dyn std::error::Error + Send + Sync>>> {
+            Box::pin(async move {
+                let _rocket_ignite = ignited_rocket
+                    .launch().await
+                    .map_err(|err| format!("Error 'Launch'ing rocket: {:?}", err))?;
+                Ok(())
+            })
+        };
+
+        Ok(runner)
+    }
+
 }
 
 fn build_rocket_config(profile: &RocketProfiles, http_port: u16, workers: u16) -> rocket::Config {
