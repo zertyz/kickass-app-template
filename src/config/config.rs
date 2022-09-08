@@ -217,7 +217,7 @@ impl Default for Config {
                                ServicesConfig {
                                    telegram: ExtendedOption::Enabled(TelegramConfig {
                                            token: String::from("<<Open TelegramApp, search for BotFather, send /newbot>>"),
-                                           bot:   TelegramBotOptions::Dice,
+                                           bot:   TelegramBotOptions::Stateless,
                                            notification_chat_ids: vec![
                                                9999999999,    // james smith
                                                9999999999,    // mary johnson
