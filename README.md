@@ -59,6 +59,9 @@ Most likely you'll need only a subset of the features provided by this template:
 ![rust+angular+material 2.png](screenshots/rust+angular+material%202.png)
 (only 44ms needed to show the content -- 13ms to load index.html + 31ms to render it. After being presented, Angular is loaded and after 664ms we have a fully working website)
 
+## Stats
+![rust+angular+internal_stats.png](screenshots/rust+angular+internal_stats.png)
+
 ## Terminal
 ![terminal-ui.png](screenshots/terminal-ui.png)
 
