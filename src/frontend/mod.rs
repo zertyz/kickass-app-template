@@ -28,7 +28,10 @@ pub fn run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std
         ExtendedOption::Enabled(ui) => match ui {
             UiOptions::Console(job) => console::run(&job, runtime, &config),
             UiOptions::Terminal => terminal::run(runtime, &config),
-            UiOptions::Egui => Ok(Egui::run_egui_app(format!("We are!!"), 5.1)),
+            UiOptions::Egui => {
+                Egui::run_egui_app(format!("We are!!"), 5.1);
+                sync_shutdown_tokio_services(runtime)
+            },
         }
         _ => panic!("BUG! empty `config.ui`"),
     }

@@ -3,7 +3,7 @@
 //! (this is done, here, on the UI thread...)
 
 
-use eframe::egui::{ColorImage, TextureHandle, Ui};
+use eframe::egui::{self, ColorImage, TextureHandle, Ui};
 pub use rlottie::{Animation,Surface};
 use rgb::{alt::BGRA8};
 
@@ -73,7 +73,7 @@ impl LottieAnimation {
                 self.lottie_player.render(frame_number, &mut self.rlottie_surface);
                 rlottie_bgra_to_u8_rgba(&self.rlottie_surface.data(), &mut self.rgba_buffer);
                 let image = ColorImage::from_rgba_unmultiplied([self.painting_width, self.painting_height], &self.rgba_buffer);
-                ui.ctx().load_texture(format!("Lottie Animation frame #{}", frame_number), image)
+                ui.ctx().load_texture(format!("Lottie Animation frame #{}", frame_number), image, egui::TextureFilter::Linear)
         });
 
         // paint the texture for this frame and request a repaint for the next one
