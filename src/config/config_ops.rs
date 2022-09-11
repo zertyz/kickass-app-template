@@ -40,14 +40,14 @@ pub fn merge_configs(mut low_priority: Config, mut high_priority: Config) -> Con
     if !high_priority.services.is_enabled() {
         high_priority.services = ExtendedOption::Enabled(ServicesConfig {
             web:           ExtendedOption::Unset,
-            server_socket: ExtendedOption::Unset,
+            socket_server: ExtendedOption::Unset,
             telegram:      ExtendedOption::Unset
         });
     }
     if !low_priority.services.is_enabled() {
         low_priority.services = ExtendedOption::Enabled(ServicesConfig {
             web:           ExtendedOption::Unset,
-            server_socket: ExtendedOption::Unset,
+            socket_server: ExtendedOption::Unset,
             telegram:      ExtendedOption::Unset
         });
     }
@@ -60,6 +60,11 @@ pub fn merge_configs(mut low_priority: Config, mut high_priority: Config) -> Con
     // case: Rocket service is, currently, only definable in the `low_priority`
     if let ExtendedOption::Enabled(l_web) = &low_priority.services.web {
         high_priority.services.web = ExtendedOption::Enabled(l_web.clone());
+    }
+
+    // case: Socket server is, currently, only definable in the `low_priority`
+    if let ExtendedOption::Enabled(l_socket_server) = &low_priority.services.socket_server {
+        high_priority.services.socket_server = ExtendedOption::Enabled(l_socket_server.clone());
     }
 
     // case: tokio_threads: defaults to 0 -- considered as unset if < 0
@@ -120,7 +125,7 @@ fn save_to_file(config: &Config, config_file_path: &str) -> Result<(), Box<dyn s
             .indentor(String::from("    "))
             .separate_tuple_members(true)
             .enumerate_arrays(true)
-            .decimal_floats(true)
+            //.decimal_floats(true)
             .extensions(ron_extensions()))
         .map_err(|err| format!("config.rs: Error serializing config as TOML: {}", err))?;
 
@@ -182,6 +187,38 @@ mod tests {
         // check load_or_create_default() for non existing file
         let _result = load_or_create_default(TEST_CONFIG_FILE)
             .expect("Could not load_or_create_default() for a non existing file");
+    }
+
+    /// assures [merge_configs()] addresses all cases
+    #[test]
+    fn merging_completenes() {
+
+        // checks high priority is honored
+        let low = Config {
+            log:           LoggingOptions::Quiet,
+            services:      ExtendedOption::Unset,
+            tokio_threads: 0,
+            ui:            ExtendedOption::Unset,
+
+        };
+        let high = Config::default();
+        let expected = Config::default();
+        let merged = merge_configs(low, high);
+        assert_eq!(merged, expected, "'merge_configs() seem to not be covering newly added configs well: High priority config got (wrongly?) overridden by low priority");
+
+        // checks low priority has its voice
+        let low = Config::default();
+        let high = Config {
+            log:           LoggingOptions::ToConsole,
+            services:      ExtendedOption::Unset,
+            tokio_threads: 0,
+            ui:            ExtendedOption::Unset,
+
+        };
+        let expected = Config::default();
+        let merged = merge_configs(low, high);
+        assert_eq!(merged, expected, "'merge_configs() seem to not be covering newly added configs well: Low priority config wasn't able to set unset properties in the high priority");
+
     }
 
 }

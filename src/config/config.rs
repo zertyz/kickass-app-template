@@ -12,7 +12,7 @@ use structopt::{StructOpt};
 /// (feel free to move comments & possible values close to the data)
 ///
 /// Root for this Application's config
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Serialize,Deserialize)]
 pub struct Config {
 
     // kickass-app-template
@@ -37,7 +37,7 @@ pub struct Config {
 }
 
 /// UI options -- how the application will interact with users
-#[derive(Debug,Clone,Copy,Serialize,Deserialize,StructOpt)]
+#[derive(Debug,PartialEq,Clone,Copy,Serialize,Deserialize,StructOpt)]
 pub enum UiOptions {
     // /// Collects running environment data to determine the best possible Ui to use:
     // /// if DISPLAY env is available, `Egui` is used, otherwise use `Terminal` if
@@ -51,15 +51,15 @@ pub enum UiOptions {
     Egui,
 }
 
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub struct ServicesConfig {
     pub web:           ExtendedOption<WebConfig>,
-    pub server_socket: ExtendedOption<SocketServerConfig>,
+    pub socket_server: ExtendedOption<SocketServerConfig>,
     pub telegram:      ExtendedOption<TelegramConfig>,
 }
 
 /// The telegram service
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub struct TelegramConfig {
     /// Telegram's bot token, obtained from "BotFather's" bot:
     /// 1) Open TelegramApp and search for BotFather
@@ -72,7 +72,7 @@ pub struct TelegramConfig {
 }
 
 /// Available bots to handle Telegram interaction
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub enum TelegramBotOptions {
     /// Simply answers each message with a dice throw
     Dice,
@@ -85,14 +85,14 @@ pub enum TelegramBotOptions {
 /// Rocket requires us to inform in which "environment" we're running.\
 /// If you use the [RocketConfigOptions::StandardRocketTomlFile] variant, each section
 /// must be present on the file.
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub enum RocketProfiles {
     Debug,
     Production,
 }
 
 /// Available Rocket configuration possibilities
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub enum RocketConfigOptions {
     /// Instructs Rocket to read configs from it's `Rocket.toml` file. Notice that Rocket will look
     /// for such file in the current working directory, rather than on the executable's location.
@@ -108,7 +108,7 @@ pub enum RocketConfigOptions {
 }
 
 /// The HTTP/HTTPS service
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub struct WebConfig {
     /// The Rocket profile to use as basis for `rocket_config`
     pub profile: RocketProfiles,
@@ -132,17 +132,20 @@ pub struct WebConfig {
 }
 
 /// The socket server
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub struct SocketServerConfig {
-    port: u16,
+    /// the interface's IP to listen to -- 0.0.0.0 will cause listening to all network interfaces
+    pub interface: String,
+    /// what port to listen to
+    pub port:      u16,
     /// How many tokio async tasks should be used to process the incoming requests?
     /// If you delegate it to events (or similar), this should be 1;
     /// If you fully process the request in the worker task (bad practice), measure and pick your optimal number.
-    workers: u16,
+    pub workers: u16,
 }
 
 /// Logging options -- what to do with log messages
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Serialize,Deserialize)]
 pub enum LoggingOptions {
     /// Simply ignore them
     Quiet,
@@ -164,7 +167,7 @@ pub enum LoggingOptions {
 /////  EVERYTHING BELOW THIS LINE WILL NOT BE INCLUDED IN THE APPLICATION'S CONFIG FILE  /////
 
 /// Jobs that this application supports. Maps to the command line options [crate::command_line::Jobs]
-#[derive(Debug,Clone,Copy,Serialize,Deserialize,StructOpt)]
+#[derive(Debug,PartialEq,Clone,Copy,Serialize,Deserialize,StructOpt)]
 pub enum Jobs {
     /// Long-Runner: Starts the service, only quitting when a SIG_TERM is received
     Daemon,
@@ -174,7 +177,7 @@ pub enum Jobs {
 }
 
 /// A simple extension to the default `Option` to allow distinction for the None state (is it unset or forcibly disabled?)
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Clone,Serialize,Deserialize)]
 pub enum ExtendedOption<T> {
     Unset,
     Disabled,
@@ -237,7 +240,11 @@ impl Default for Config {
                                        web_app:                      true,
                                        routes_prefix: "".to_string()
                                    }),
-                                   server_socket: ExtendedOption::Disabled,
+                                   socket_server: ExtendedOption::Enabled(SocketServerConfig {
+                                       interface: "0.0.0.0".to_string(),
+                                       port: 9758,
+                                       workers: 1,
+                                   }),
                                }
                            ),
             tokio_threads: 0,

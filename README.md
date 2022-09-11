@@ -15,6 +15,9 @@ Most likely you'll need only a subset of the features provided by this template:
          - [X] stateless & stateful bot examples (with navigation)
          - [X] application initiated message sending
          - [ ] messaging framework inspired on InstantVAS' Microservice pattern
+      - [X] Socket Server, with async Streams & Reactive pipelines
+         - [X] Textual protocols (like FIX)
+         - [ ] Binary protocols
       - [X] Hooks for your own Service
          - [X] async with `Tokio`
    3. UIs:

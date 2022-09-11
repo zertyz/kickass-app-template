@@ -24,6 +24,7 @@ use std::{
     sync::Arc,
     thread::{self, JoinHandle},
 };
+use std::borrow::BorrowMut;
 use tokio::sync::RwLock;
 use log::{debug, error, warn};
 use owning_ref::ArcRef;
@@ -113,10 +114,12 @@ fn start_tokio_runtime_and_apps(runtime: Arc<RwLock<Runtime>>, config: Arc<Confi
         if config.tokio_threads > 0 {
             tokio_runner.worker_threads(config.tokio_threads as usize);
         }
-        tokio_runner
+        let tokio_runtime = Arc::new(tokio_runner
             .enable_all()
             .build()
-            .unwrap()
+            .unwrap());
+        runtime.blocking_write().tokio_runtime = Some(Arc::clone(&tokio_runtime));
+        tokio_runtime
             .block_on(async {
                 let runtime_for_async_main_task = Arc::clone(&runtime);
                 let config_for_async_main_task = Arc::clone(&config);
@@ -133,7 +136,6 @@ fn start_tokio_runtime_and_apps(runtime: Arc<RwLock<Runtime>>, config: Arc<Confi
                         let telegram_config = ArcRef::from(config_for_telegram_task)
                             .map(|config| &*config.services.telegram);
                         let mut telegram_ui = frontend::telegram::TelegramUI::new(telegram_config).await;
-                        //let _shutdown_token = telegram_ui.shutdown_token.clone();
                         let run_closure = telegram_ui.runner();
                         Runtime::register_telegram_ui(&runtime_for_telegram_task, telegram_ui).await;
                         (run_closure)().await;
@@ -152,6 +154,26 @@ fn start_tokio_runtime_and_apps(runtime: Arc<RwLock<Runtime>>, config: Arc<Confi
                         //let shutdown_token = rocket_handle.shutdown_token.expect("shutdown should be available at this point");
                         Runtime::register_web_server(&runtime_for_rocket_task, rocket_handle).await;
                         runner_closure().await?;
+                    }
+                    Ok(())
+                });
+                let runtime_for_socket_server_task = Arc::clone(&runtime);
+                let config_for_socket_server_task = Arc::clone(&config);
+                let mut socket_server_task = tokio::spawn(async move {
+                    if let ExtendedOption::Enabled(_socket_server_config) = &config_for_socket_server_task.services.socket_server {
+                        debug!("    starting Socket Server service...");
+                        let socket_server_config = ArcRef::from(config_for_socket_server_task)
+                            .map(|config| &*config.services.socket_server);
+                        let mut socket_server_handle = frontend::socket_server::SocketServer::new(socket_server_config);
+                        let tokio_runtime = Arc::clone(runtime.read().await.tokio_runtime.as_ref().unwrap());
+                        let (processor_stream, stream_producer, stream_closer) = frontend::socket_server::sync_processors(tokio_runtime);
+                        let processor = socket_server_handle.set_processor(processor_stream, stream_producer, stream_closer);
+                        let executor_join_handle = frontend::socket_server::spawn_stream_executor(processor).await;
+                        let runner_closure = socket_server_handle.runner().await?;
+                        Runtime::register_socket_server(&runtime_for_socket_server_task, socket_server_handle).await;
+                        let (service_runner_result, stream_executor_result) = tokio::join!(runner_closure(), async {executor_join_handle.await});
+                        service_runner_result.map_err(|err| format!("service runner failed: {}", err))?;
+                        stream_executor_result.map_err(|err| format!("stream executor failed: {}", err))?;
                     }
                     Ok(())
                 });
@@ -175,10 +197,11 @@ fn start_tokio_runtime_and_apps(runtime: Arc<RwLock<Runtime>>, config: Arc<Confi
                     Some(())
                 };
 
-                let mut async_main_result = None;
-                let mut telegram_result = None;
-                let mut rocket_result = None;
-                while async_main_result.is_none() || telegram_result.is_none() || rocket_result.is_none() {
+                let mut async_main_result    = None;
+                let mut telegram_result      = None;
+                let mut rocket_result        = None;
+                let mut socket_server_result = None;
+                while async_main_result.is_none() || telegram_result.is_none() || rocket_result.is_none() || socket_server_result.is_none() {
                     tokio::select! {
                         result = &mut async_main_task, if async_main_result.is_none() => {
                             async_main_result = join_and_log(result, "async_main");
@@ -188,7 +211,10 @@ fn start_tokio_runtime_and_apps(runtime: Arc<RwLock<Runtime>>, config: Arc<Confi
                         },
                         result = &mut rocket_task, if rocket_result.is_none() => {
                             rocket_result = join_and_log(result, "rocket service");
-                        }
+                        },
+                        result = &mut socket_server_task, if socket_server_result.is_none() => {
+                            socket_server_result = join_and_log(result, "socket service");
+                        },
                     }
                 }
                 all_good

@@ -1,10 +1,17 @@
 //! Please, see [super]
 
-use crate::frontend::{
-    telegram::TelegramUI,
-    web::WebServer,
+use crate::{
+    config::SocketServerConfig,
+    frontend::{
+        telegram::TelegramUI,
+        web::WebServer,
+        socket_server::SocketServer,
+    },
 };
-use std::time::{SystemTime,Duration};
+use std::{
+    sync::Arc,
+    time::{SystemTime,Duration}
+};
 use futures::future::BoxFuture;
 use log::debug;
 use tokio::sync::RwLock;
@@ -26,6 +33,11 @@ pub struct Runtime {
     /// decisions regarding the need for datasets & amalgamations to be regenerated
     pub executable_path: String,
 
+    /// allows calling `tokio_runtime.block_on()`, `tokio_runtime.spawn()`, etc.
+    /// on this to run async tasks on sync contexts, although
+    /// `futures::executor::block_on()` seems to be faster
+    pub tokio_runtime: Option<Arc<tokio::runtime::Runtime>>,
+
     // internal task communication
     //////////////////////////////
 
@@ -36,6 +48,10 @@ pub struct Runtime {
     /// The Rocket controller -- can be used to inquiring the running state and to request the service to shutdown
     /// -- See [WebServer]
     web_server: Option<WebServer>,
+
+    /// The Socket Server controller -- can be used to inquiring the running state and to request the service to shutdown
+    /// -- See [SocketServer]
+    socket_server: Option<SocketServer<'static>>,
 
 }
 
@@ -108,13 +124,16 @@ impl Runtime {
     pub fn new(executable_path: String) -> Self {
         Self {
             executable_path,
-            telegram_ui: None,
-            web_server:  None,
+            tokio_runtime: None,
+            telegram_ui:   None,
+            web_server:    None,
+            socket_server: None,
         }
     }
 }
 
 // implements getters and setters for all `Option` fields that are to be set/get asynchronously
 ///////////////////////////////////////////////////////////////////////////////////////////////
-impl_runtime!("telegram_ui", telegram_ui, TelegramUI, register_telegram_ui, do_for_telegram_ui);
-impl_runtime!("web_server",  web_server,  WebServer,  register_web_server,  do_for_web_server);
+impl_runtime!("telegram_ui",   telegram_ui,   TelegramUI,              register_telegram_ui,   do_for_telegram_ui);
+impl_runtime!("web_server",    web_server,    WebServer,               register_web_server,    do_for_web_server);
+impl_runtime!("socket_server", socket_server, SocketServer<'static>,   register_socket_server, do_for_socket_server);

@@ -11,9 +11,9 @@ use log::{info};
 
 /// Runs the service this application provides
 pub async fn long_runner(_runtime: &RwLock<Runtime>, _config: &Config) -> Result<(), Box<dyn std::error::Error>> {
-    info!("HERE YOU WOULD START YOUR SERVICE. For now, we'll sleep for 5 min then quit");
-    tokio::time::sleep(Duration::from_secs(300)).await;
-    info!("DEMO DEAMON IS OVER. Application will now shutdown gracefully");
+    info!("HERE YOU WOULD START YOUR SERVICE. For now, we'll sleep for 3 min then quit");
+    tokio::time::sleep(Duration::from_secs(180)).await;
+    info!("DEMO DAEMON IS OVER. Application will now shutdown gracefully");
     Ok(())
 }
 
