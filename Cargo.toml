@@ -63,7 +63,7 @@ slog-stdlog = "4"   # Facade between slog and Rust's standard 'log' api
 slog-scope  = "4"
 slog        = "2"
 sloggers    = "2"
-#simple_logger = {version = "2.1", features = ["stderr"]}  # a dirty console logger
+#simple_logger = {version = "2.3", features = ["stderr"]}  # a dirty console logger
 
 # terminal UI
 tui       = { version = "0.19", features = ['crossterm'] }
@@ -100,7 +100,7 @@ ctor = { version = "0.1", optional = true }
 
 [dev-dependencies]
 ctor          = "0.1"    # setup and teardown for test modules
-simple_logger = "2.1"    # a dirty console logger
+simple_logger = "2.3"    # a dirty console logger
 #httpmock      = "0"      # allows testing integration with http services (commented out for it was causing dependency issues as of 2022-09-09)
 big-o-test    = "0.2"    # enforce algorithm's maximum allowed complexity
 
