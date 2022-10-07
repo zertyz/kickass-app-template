@@ -3,7 +3,7 @@ import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 import {throwError} from 'rxjs';
 import {catchError, retry} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import {UntypedFormBuilder, UntypedFormGroup, Validators} from '@angular/forms';
 import {FieldDataType, FieldPresentationType, Form, FormField, HttpMethod} from './form';
 
 
@@ -31,12 +31,12 @@ export class ExplorerFormComponent {
   formGroupModel: {[p: string]: any} = {};
 
   // field validators -- to be initialized after @Input parameters
-  formGroup: FormGroup = this.fb.group(this.formGroupModel);
+  formGroup: UntypedFormGroup = this.fb.group(this.formGroupModel);
 
   backendData: any = {};
 
 
-  constructor(private fb: FormBuilder, private httpClient: HttpClient) {}
+  constructor(private fb: UntypedFormBuilder, private httpClient: HttpClient) {}
 
   ngOnInit(): void {
     this.formGroupModel = this.form.fields
