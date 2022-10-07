@@ -44,6 +44,18 @@ Most likely you'll need only a subset of the features provided by this template:
       - [X] Built-in example for Big-O analysis with `big-o-test` crate
       - [X] Built-in example for Criterion bench
 
+# Running the default version
+
+   1) Init the submodule for the `web-stats` app:
+       `git submodule update --init --remote`
+   2) Build the angular web apps (you should have Angular & Node previously setup). Note that if any of those commands fail, building the app in Release mode won't be possible:
+       `cd web-app/; npm i; npm run prerender; cd ..`
+       `cd web-stats/; npm i; npm build; cd ..`
+   3) Build the Rust app (release, optimized for the local processor):
+       `RUSTFLAGS="-C target-cpu=native" cargo build --release`
+   4) Inspect the command line options (with `--help`) to pick up which UI to run. Bellow, how to run the standard console / daemon mode:
+       `./target/release/kickass-app-template console daemon`
+
 # How to use it
 
    * Click `Use this template`, at the top right of this github page
@@ -80,3 +92,9 @@ Most likely you'll need only a subset of the features provided by this template:
 
 ## Config .ron example
 ![config-example.png](screenshots/config-example.png)
+
+
+# Notes on Angular upgrades for web-app
+   * https://update.angular.io
+   * (remember to add Universal, like this `ng update @angular/core@14 @angular/cli@14 @nguniversal/express-engine@14`)
+   * 2022-10-07: bug no recent Node versions: https://pullanswer.com/questions/prerendering-fails-on-node-js-18-9-but-succeeds-on-node-18-8
