@@ -46,11 +46,15 @@ Most likely you'll need only a subset of the features provided by this template:
 
 # Running the default version
 
+Tested in this environment:
+   * Rust 1.64
+   * Node 18.3.0 (18.9.0 & 18.10.0 are known to mess up with Angular Universal -- more details in the link at the end)
+
    1) Init the submodule for the `web-stats` app:
        `git submodule update --init --remote`
    2) Build the angular web apps (you should have Angular & Node previously setup). Note that if any of those commands fail, building the app in Release mode won't be possible:
        `cd web-app/; npm i; npm run prerender; cd ..`
-       `cd web-stats/; npm i; npm build; cd ..`
+       `cd web-stats/; npm i; npm run build; cd ..`
    3) Build the Rust app (release, optimized for the local processor):
        `RUSTFLAGS="-C target-cpu=native" cargo build --release`
    4) Inspect the command line options (with `--help`) to pick up which UI to run. Bellow, how to run the standard console / daemon mode:
