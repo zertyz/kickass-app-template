@@ -78,6 +78,26 @@ impl TelegramUI {
 
     /// sends the `message` to the single `chat_id`
     pub async fn send_message(&self, chat_id: i64, message: &str, html: bool) -> Result<(), Box<dyn std::error::Error>> {
+        // TODO 2022-11-20 Maybe an API redesign should be done for the sake of efficiency: 'adjust_message(&str) -> &[Cow<&str>]' might be introduced
+        //                 to avoid the need of doing the following every time, in which case, this method should be reverted back to just sending
+        //                 the message. PS: `broadcast_message()` might be one example of a function calling adjust_message() and then send_message()
+        //                 as many times as needed. Note the bellow version only cuts the message and discards the rest of it, while on the proposed
+        //                 'adjust_message()', we'd split it into several parts. HTML would still be a challenge...
+        // adjust the message to telegram limits
+        const TELEGRAM_MAX_MESSAGE_SIZE: usize = 4096;
+        let mut message = Cow::Borrowed(message);
+        if message.len() > TELEGRAM_MAX_MESSAGE_SIZE {
+            // if the message is too big, cuts it down for sending, adding the '...' suffix to indicate there was a cut:
+            // for plain text, just add it; for HTML, preserve the last closing HTML tag as well, in order not to defecate formatting
+            let cutting_suffix = if !html {
+                format!("...")
+            }  else {
+                let last_closing_tag_pos = message.rfind("</").unwrap_or(message.len());
+                format!("...{}", &message[last_closing_tag_pos..])
+            };
+            message = Cow::Owned(format!("{}{}", &message[0..TELEGRAM_MAX_MESSAGE_SIZE -cutting_suffix.len()], cutting_suffix));
+        }
+
         let sender = self.bot.send_message(teloxide::types::ChatId(chat_id), message);
         let result = if html {
             sender.parse_mode(teloxide::types::ParseMode::Html)
