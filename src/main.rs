@@ -115,6 +115,8 @@ fn start_tokio_runtime_and_apps(runtime: Arc<RwLock<Runtime>>, config: Arc<Confi
             tokio_runner.worker_threads(config.tokio_threads as usize);
         }
         let tokio_runtime = Arc::new(tokio_runner
+            .thread_stack_size(4 * 1024 * 1024)     // Default for Rust's main thread is 4M; for a spawned thread (the case here), 2M; Adjust as you wish if your algorithms are heavy on recursion
+            //.unhandled_panic(UnhandledPanic::ShutdownRuntime)     // TODO For upcoming Tokio versions (this one is still in unstable): shutdown if spawned tasks panic AND we're running in debug mode
             .enable_all()
             .build()
             .unwrap());
