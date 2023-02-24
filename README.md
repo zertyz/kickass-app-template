@@ -24,7 +24,8 @@ Most likely you'll need only a subset of the features provided by this template:
       - [X] Console -- logging through `slog` with stdout and file sink options
       - [X] Terminal --  `tui` + `crossterm`;
       - [X] GUI -- `egui`
-         - [X] `lottie` animations with `rlottie`
+         - [X] on the native computer's UI and also on Web Assembly, sharing the same code
+         - [X] `lottie` animations with `rlottie` (even on web?)
          - [ ] charts with `plotters`
       - [X] Integrated & embedded Angular UI application
          - [X] Angular Universal, automatically pre-rendering parameter-less routes
@@ -47,26 +48,29 @@ Most likely you'll need only a subset of the features provided by this template:
 # Running the default version
 
 Tested in this environment:
-   * Rust 1.64
-   * Node 18.3.0 (18.9.0 & 18.10.0 are known to mess up with Angular Universal -- more details in the link at the end)
+   * Rust 1.67
+   * Node 19.7.0 (18.9.0 & 18.10.0 are known to mess up with Angular Universal -- more details in the link at the end)
 
    1) Init the submodule for the `web-stats` app:
-       `git submodule update --init --remote`
-   2) Build the angular web apps (you should have Angular & Node previously setup). Note that if any of those commands fail, building the app in Release mode won't be possible:
-       `cd web-app/; npm i; npm run prerender; cd ..`
-       `cd web-stats/; npm i; npm run build; cd ..`
-   3) Build the Rust app (release, optimized for the local processor):
-       `RUSTFLAGS="-C target-cpu=native" cargo build --release`
-   4) Inspect the command line options (with `--help`) to pick up which UI to run. Bellow, how to run the standard console / daemon mode:
-       `./target/release/kickass-app-template console daemon`
+       ```git submodule update --init --remote```
+   2) Build the angular web apps (you should have `Angular` & `Node` previously setup). Note that if any of those commands fail, building the app in Release mode won't be possible:
+       ```cd web-app/; npm i; npm run prerender; cd ..```
+       ```cd web-stats/; npm i; npm run build; cd ..```
+   3) Build the web-egui app (you should have `Trunk` previously setup):
+       ```cd web-egui/; ~/.cargo/bin/trunk build --release; cd ..```
+   4) Build the Rust app (release, optimized for the local processor):
+       ```RUSTFLAGS="-C target-cpu=native" cargo build --release```
+   5) Inspect the command line options (with `--help`) to pick up which UI to run. Bellow, how to run the standard console / daemon mode:
+       ```./target/release/kickass-app-template console daemon```
 
 # How to use it
 
-   * Click `Use this template`, at the top right of this github page
+   * Click `Use this template`, at the top right of this GitHub page
+   * Edit `build.rs` and remove the web apps you don't want, removing their directories as well
    * Edit `Cargo.toml` and clean it up from the dependencies you don't need + associated code, then, failing to compile
    * Remodel `src/config` & `src/command_line` modules to your needs -- then go ahead and do it for `src/runtime` as well
    * Add all modules for your business logic
-   * Elect parts of your code for Big O analysis tests and update `tests/big-o-analysis` -- then do the same for Criterion in `bench/`
+   * Elect parts of your code for Big O analysis tests and update `tests/big-o-tests.rs` -- then do the same for Criterion in `bench/`
    * Inspect & adjust the `src/frontend` module & submodules
    * Share back (through a PR) any improvements you do to the template
 
@@ -78,6 +82,10 @@ Tested in this environment:
 ![rust+angular+material 2.png](screenshots/rust+angular+material%202.png)
 (only 44ms needed to show the content -- 13ms to load index.html + 31ms to render it. After being presented, Angular is loaded and after 664ms we have a fully working website)
 
+## Egui (web + mobile)
+![egui-web.png](screenshots/egui-web.png)
+(the same code is shared between the native and web versions of the egui interface)
+
 ## Stats
 ![rust+angular+internal_stats.png](screenshots/rust+angular+internal_stats.png)
 
@@ -87,6 +95,7 @@ Tested in this environment:
 ## EGui
 ![egui-fractal-clock-example.png](screenshots/egui-fractal-clock-example.png)
 ![egui-lottie-animations.jpg](screenshots/egui-lottie-animations.jpg)
+(the same code is shared between the native and web versions of the egui interface)
 
 ## Telegram
 ![telegram-bot.png](screenshots/telegram-bot.png)
@@ -101,4 +110,4 @@ Tested in this environment:
 # Notes on Angular upgrades for web-app
    * https://update.angular.io
    * (remember to add Universal, like this `ng update @angular/core@14 @angular/cli@14 @nguniversal/express-engine@14`)
-   * 2022-10-07: bug no recent Node versions: https://pullanswer.com/questions/prerendering-fails-on-node-js-18-9-but-succeeds-on-node-18-8
+   * 2022-10-07: bug on 18.9 Node versions: https://pullanswer.com/questions/prerendering-fails-on-node-js-18-9-but-succeeds-on-node-18-8

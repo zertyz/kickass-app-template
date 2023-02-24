@@ -2,7 +2,7 @@
 //! as well as serializers & deserializers
 
 use std::fmt::Write;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use ron::{
     Options,
     ser::PrettyConfig,
@@ -65,28 +65,24 @@ pub enum ServerMessages {
 // RON SERDE
 ////////////
 
-lazy_static! {
+static RON_EXTENSIONS: Lazy<ron::extensions::Extensions> = Lazy::new(|| {
+    let mut extensions = ron::extensions::Extensions::empty();
+    extensions.insert(ron::extensions::Extensions::IMPLICIT_SOME);
+    extensions.insert(ron::extensions::Extensions::UNWRAP_NEWTYPES);
+    extensions.insert(ron::extensions::Extensions::UNWRAP_VARIANT_NEWTYPES);
+    extensions
+});
 
-    static ref RON_EXTENSIONS: ron::extensions::Extensions = {
-        let mut extensions = ron::extensions::Extensions::empty();
-        extensions.insert(ron::extensions::Extensions::IMPLICIT_SOME);
-        extensions.insert(ron::extensions::Extensions::UNWRAP_NEWTYPES);
-        extensions.insert(ron::extensions::Extensions::UNWRAP_VARIANT_NEWTYPES);
-        extensions
-    };
+static RON_SERIALIZER_CONFIG: Lazy<PrettyConfig> = Lazy::new(|| ron::ser::PrettyConfig::new()
+    .depth_limit(10)
+    .new_line(String::from(""))
+    .indentor(String::from(""))
+    .separate_tuple_members(true)
+    .enumerate_arrays(false)
+    .extensions(*RON_EXTENSIONS) );
 
-    static ref RON_SERIALIZER_CONFIG: PrettyConfig = ron::ser::PrettyConfig::new()
-        .depth_limit(10)
-        .new_line(String::from(""))
-        .indentor(String::from(""))
-        .separate_tuple_members(true)
-        .enumerate_arrays(false)
-        .extensions(*RON_EXTENSIONS);
-
-    static ref RON_DESERIALIZER_CONFIG: Options = ron::Options::default()
-        ;//.with_default_extension(*RON_EXTENSIONS);
-
-}
+static RON_DESERIALIZER_CONFIG: Lazy<Options> = Lazy::new(|| ron::Options::default() );
+    //.with_default_extension(*RON_EXTENSIONS);
 
 /// RON serializer for server messages
 pub fn ron_serializer(message: ServerMessages) -> String {

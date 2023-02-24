@@ -3,9 +3,13 @@
 use crate::config::{Config, TelegramConfig, TelegramBotOptions};
 use std::{
     sync::Arc,
+    borrow::{Borrow, Cow},
 };
 use owning_ref::OwningRef;
-use futures::future::BoxFuture;
+use futures::{
+    SinkExt,
+    future::BoxFuture
+};
 use teloxide::{
     prelude::*,
     utils::command::BotCommands,
@@ -98,7 +102,7 @@ impl TelegramUI {
             message = Cow::Owned(format!("{}{}", &message[0..TELEGRAM_MAX_MESSAGE_SIZE -cutting_suffix.len()], cutting_suffix));
         }
 
-        let sender = self.bot.send_message(teloxide::types::ChatId(chat_id), message);
+        let sender = self.bot.send_message::<ChatId, &str>(teloxide::types::ChatId(chat_id), message.borrow());
         let result = if html {
             sender.parse_mode(teloxide::types::ParseMode::Html)
                 .send().await
@@ -159,7 +163,7 @@ impl TelegramUI {
 // commands this bot accepts -- start by sending it '/help'
 // Commands (deriving BotCommands) should be based off 'TradesQueryOptions'
 #[derive(BotCommands, Clone)]
-#[command(rename = "lowercase", description = "These commands are supported:")]
+#[command(rename_rule = "lowercase", description = "These commands are supported:")]
 enum Commands {
     #[command(description = "display this text")]
     Help,

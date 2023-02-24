@@ -36,7 +36,7 @@ impl Default for FractalClock {
 impl FractalClock {
     pub fn show(&mut self, ui: &mut Ui, seconds_since_midnight: Option<f64>) {
         if !self.paused {
-            self.time = seconds_since_midnight.unwrap_or_else(|| ui.input().time);
+            self.time = seconds_since_midnight.unwrap_or_else(|| ui.input(|input_state| input_state.time));
             ui.ctx().request_repaint();
         }
 

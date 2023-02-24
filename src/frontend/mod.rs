@@ -7,10 +7,13 @@ pub mod telegram;
 pub mod web;
 pub mod socket_server;
 
-use crate::{runtime::Runtime, config::{Config}, ExtendedOption, UiOptions};
+use crate::{
+    runtime::Runtime,
+    config::{Config, ExtendedOption, UiOptions},
+    frontend::egui::Egui,
+};
 use tokio::sync::RwLock;
-use crate::frontend::egui::Egui;
-use log::{debug};
+use log::{debug,error};
 
 
 pub async fn async_run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
@@ -30,7 +33,8 @@ pub fn run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std
             UiOptions::Console(job) => console::run(&job, runtime, &config),
             UiOptions::Terminal => terminal::run(runtime, &config),
             UiOptions::Egui => {
-                Egui::run_egui_app(format!("We are!!"), 5.1);
+                Egui::run_egui_native_app()
+                    .unwrap_or_else(|err| error!("Error running egui: {:?}", err));
                 sync_shutdown_tokio_services(runtime)
             },
         }

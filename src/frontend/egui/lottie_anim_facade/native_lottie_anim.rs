@@ -1,9 +1,10 @@
+//! Implements the native version of [super::LottieAnimation]
 //! as of 2022-05-12, egui is still zero-copy unfriendly, so we circumvent this performance hit by
-//! "pre-loading" all frames of the animation into bitmap buffers (textures), at the cost of increased RAM usage
-//! (this is done, here, on the UI thread...)
+//! "pre-loading" all frames of the animation into bitmap buffers (textures), at the cost of increased (video) RAM usage
+//! (done in the UI thread...)
 
 
-use eframe::egui::{self, ColorImage, TextureHandle, Ui};
+use eframe::egui::{self, ColorImage, TextureHandle, TextureOptions, Ui};
 pub use rlottie::{Animation,Surface};
 use rgb::{alt::BGRA8};
 
@@ -18,9 +19,9 @@ pub struct LottieAnimation {
     rgba_buffer:     Vec<u8>,
 }
 
-impl LottieAnimation {
+impl super::types::LottieAnimationFacade for LottieAnimation {
 
-    pub fn from_data(animation_name: String, animation_data: String) -> Self {
+    fn from_data(animation_name: String, animation_data: String) -> Self {
         let lottie_player = Animation::from_data(
             animation_data.to_string(),
             animation_name,
@@ -42,7 +43,7 @@ impl LottieAnimation {
         }
     }
 
-    pub fn show(&mut self, ui: &mut Ui, _seconds: f64) {
+    fn show(&mut self, ui: &mut Ui, _seconds: f64) {
         let max_size = ui.available_size();
         let frame_number = self.repaint_counter % self.lottie_player.totalframe();
         self.repaint_counter += 1;
@@ -73,7 +74,7 @@ impl LottieAnimation {
                 self.lottie_player.render(frame_number, &mut self.rlottie_surface);
                 rlottie_bgra_to_u8_rgba(&self.rlottie_surface.data(), &mut self.rgba_buffer);
                 let image = ColorImage::from_rgba_unmultiplied([self.painting_width, self.painting_height], &self.rgba_buffer);
-                ui.ctx().load_texture(format!("Lottie Animation frame #{}", frame_number), image, egui::TextureFilter::Linear)
+                ui.ctx().load_texture(format!("Lottie Animation frame #{}", frame_number), image, TextureOptions::LINEAR)
         });
 
         // paint the texture for this frame and request a repaint for the next one

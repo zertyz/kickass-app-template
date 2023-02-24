@@ -3,6 +3,16 @@ name = "kickass-app-template"
 version = "0.1.0"
 edition = "2021"
 
+# binaries
+# TODO 2023-02-21: remove this section after all parties had merged (and shared back) the latest changes: move src/main.rs to src/bin/main.rs & egui_webassembly_main.rs to src/bin/egui_webassembly.rs
+#                  (by putting rust files in src/bin, this section is not necessary -- see https://stackoverflow.com/a/36604610/10297793)
+[[bin]]
+name = "kickass_app_template"
+path = "src/main.rs"
+#[[bin]]
+#name = "egui_webassembly"
+#path = "web-egui/src/main.rs"
+
 [features]
 default = [
     # comment out to use the default allocator, which works better than all others in low memory environments
@@ -29,8 +39,8 @@ tcmalloc_allocator_bundled = ["tcmalloc/bundled"]       # this one uses tcmalloc
 
 # global allocators -- enabled by features -- see features.rs
 jemallocator = { version = "0.5", optional = true }
-mimalloc     = { version="0.1",   optional = true }
-tcmalloc     = { version="0.3",   default-features = false, optional = true }
+mimalloc     = { version = "0.1", optional = true }
+tcmalloc     = { version = "0.3", default-features = false, optional = true }
 # other interesting allocators:
 # scudo - focused on heap security (prevents heap exploitation by unsafe / external code)
 
@@ -67,25 +77,25 @@ sloggers    = "2"
 
 # terminal UI
 tui       = { version = "0.19", features = ['crossterm'] }
-crossterm = "0.25"  # from tui's Cargo.toml
+crossterm = "0.26"  # from tui's Cargo.toml
 rand      = "0.8"
 
 # GUI
-eframe      = { version = "0.19", features = ["persistence"] }   # Gives us egui, epi and web+native backends, allowing it to save & load the UI state between runs
-egui_extras = { version = "0.19", features = ["svg"] }           # Additional widgets for egui: Images, Tables, ...
+eframe      = { version = "0.21", features = ["persistence"] }   # Gives us egui, epi and web+native backends, allowing it to save & load the UI state between runs
+egui_extras = { version = "0.21", features = ["svg"] }           # Additional widgets for egui: Images, Tables, ...
 rlottie     = "0.5"                                              # Lottie animations -- depends on 'rlottie' package from AUR
 rgb         = { version = "0.8.32", default-features = false }   # for rlottie pixel format conversions
 
 # telegram UI
-teloxide = { version = "0.10", features = ["macros", "auto-send"] } # telegram client
+teloxide = { version = "0.12", features = ["macros", "auto-send"] } # telegram client
 reqwest  = { version = "0.11", features = ["cookies", "gzip"] }     # web client
 
 # web API / UI
 rocket       = { version = "0.5.0-rc.2", features = ["json"] }
-tokio        = { version = "1", features = ["full", "rt-multi-thread"] }
-tokio-stream = "0.1"
+tokio        = { version = "1",          features = ["full", "rt-multi-thread"] }
 futures      = { version = "0.3" }
-lazy_static  = "1.4"    # used when serving embedded files
+tokio-stream = "0.1"
+once_cell    = "1.17"    # used when serving embedded files
 
 # socket server
 message-io = { version = "0.14", default-features = false, features = ["tcp"] }             # good ideas regarding event based processing, but to be replaced by my own Tokio implementations, since this behaves bad in really high loads
@@ -100,8 +110,8 @@ ctor = { version = "0.1", optional = true }
 
 [dev-dependencies]
 ctor          = "0.1"    # setup and teardown for test modules
-simple_logger = "2.3"    # a dirty console logger
-#httpmock      = "0"      # allows testing integration with http services (commented out for it was causing dependency issues as of 2022-09-09)
+simple_logger = "4"      # a dirty console logger
+httpmock      = "0"      # allows testing integration with http services (commented out for it was causing dependency issues as of 2022-09-09)
 big-o-test    = "0.2"    # enforce algorithm's maximum allowed complexity
 
 
