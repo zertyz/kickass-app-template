@@ -82,7 +82,7 @@ Tested in this environment:
 ![rust+angular+material 2.png](screenshots/rust+angular+material%202.png)
 (only 44ms needed to show the content -- 13ms to load index.html + 31ms to render it. After being presented, Angular is loaded and after 664ms we have a fully working website)
 
-## Egui (web + mobile)
+## EGui (web + mobile)
 ![egui-web.png](screenshots/egui-web.png)
 (the same code is shared between the native and web versions of the egui interface)
 
@@ -92,7 +92,7 @@ Tested in this environment:
 ## Terminal
 ![terminal-ui.png](screenshots/terminal-ui.png)
 
-## EGui
+## EGui (native)
 ![egui-fractal-clock-example.png](screenshots/egui-fractal-clock-example.png)
 ![egui-lottie-animations.jpg](screenshots/egui-lottie-animations.jpg)
 (the same code is shared between the native and web versions of the egui interface)
