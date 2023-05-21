@@ -58,6 +58,7 @@ Tested in this environment:
        ```cd web-stats/; npm i; npm run build; cd ..```
    3) Build the web-egui app (you should have `Trunk` previously setup):
        ```cd web-egui/; ~/.cargo/bin/trunk build --release; cd ..```
+       (make sure you have `trunk` & webasm build tools installed. If not, `cargo install trunk` & `rustup target add wasm32-unknown-unknown`)
    4) Build the Rust app (release, optimized for the local processor):
        ```RUSTFLAGS="-C target-cpu=native" cargo build --release```
    5) Inspect the command line options (with `--help`) to pick up which UI to run. Bellow, how to run the standard console / daemon mode:
