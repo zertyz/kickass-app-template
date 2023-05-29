@@ -2,10 +2,10 @@
 
 This repository presents a seed for creating backend Rust applications -- with preset libs, UIs, services & design patterns.
 
-Most likely you'll need only a subset of the features provided by this template:
+Most likely, you'll need only a subset of the features provided by this template:
    1. Additional Runtimes:
       - [X] Tokio
-      - [ ] Ogre-Workers, for event-driven / iterator-driven / stream-based programming
+      - [X] Reactive programming with the `reactive-mutiny` crate for event-driven / reactive & stream-based programming
    2. Services:
       - [X] Web, through `Rocket`
          - [X] Angular UI app -- demo featuring the backend services API exploration (more details bellow)
@@ -63,6 +63,8 @@ Tested in this environment:
        ```RUSTFLAGS="-C target-cpu=native" cargo build --release```
    5) Inspect the command line options (with `--help`) to pick up which UI to run. Bellow, how to run the standard console / daemon mode:
        ```./target/release/kickass-app-template console daemon```
+   6) After the first run, the default config file is create in the same directory as the binary -- named `kickass_app_template.config.ron`.
+      Follow the instructions there & set the Telegram token for your bot as well as any `chat id`s that you'd like to send push notifications to.
 
 # How to use it
 
@@ -76,21 +78,25 @@ Tested in this environment:
    * Share back (through a PR) any improvements you do to the template
 
 
+# Why
+
+This template brings up a basis for 
+
 # Screenshots
 
 ## Angular
 ![rust+angular+material 1.png](screenshots/rust+angular+material%201.png)
 ![rust+angular+material 2.png](screenshots/rust+angular+material%202.png)
-(only 44ms needed to show the content -- 13ms to load index.html + 31ms to render it. After being presented, Angular is loaded and after 664ms we have a fully working website)
+(due to Angular-Universal pre-rendering, only 44ms are needed to show the content -- 13ms to load index.html + 31ms to render it. After being presented, Angular is loaded and after 664ms we have a fully working website)
 
 ## EGui (web + mobile)
 ![egui-web.png](screenshots/egui-web.png)
 (the same code is shared between the native and web versions of the egui interface)
 
-## Stats
+## Stats Web UI
 ![rust+angular+internal_stats.png](screenshots/rust+angular+internal_stats.png)
 
-## Terminal
+## Terminal UI
 ![terminal-ui.png](screenshots/terminal-ui.png)
 
 ## EGui (native)
@@ -98,7 +104,7 @@ Tested in this environment:
 ![egui-lottie-animations.jpg](screenshots/egui-lottie-animations.jpg)
 (the same code is shared between the native and web versions of the egui interface)
 
-## Telegram
+## Telegram (chat UI)
 ![telegram-bot.png](screenshots/telegram-bot.png)
 
 ## Command-Line options example
