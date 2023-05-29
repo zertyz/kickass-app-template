@@ -35,15 +35,19 @@ fn custom_sync_initialization(_runtime: &RwLock<Runtime>, _config: &Config) -> R
     Ok(())
 }
 
-fn sync_main(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn Error>> {
+fn sync_main(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn Error + Send + Sync>> {
     let result = frontend::run(runtime, config);
     debug!("App's sync main is done. Result: '{:?}'", result);
     result
 }
 
-async fn async_main(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn Error>> {
+async fn async_main(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn Error + Send + Sync>> {
+    // debug!("    Instantiating <<your logic's injections>>...");
+    // Runtime::register_YOUR_LOGIC_COMPONENT(runtime, YourLogicComponent::new().await).await;
     let result = frontend::async_run(runtime, config).await;
-    debug!("App's async main is done. Result: '{:?}'", result);
+    debug!("App's async frontend::async_run() is done. Result: '{:?}'", result);
+    // Runtime::do_for_YOUR_LOGIC_COMPONENT(runtime, |your_logic_component_instance| Box::pin(async { your_logic_component_instance.shutdown().await })).await;
+    debug!("App's async main is done.");
     result
 }
 
@@ -76,7 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Err(Box::from(format!("Application ended with error in one of the Tokio tasks")))
         }
         true => {
-            debug!("All Tokio tasks ended. Starting graceful shutdown process!");
+            debug!("All Tokio tasks ended gracefully");
             warn!("DONE! (Application ended gracefully)");
             Ok(())
         }
@@ -194,7 +198,7 @@ fn start_tokio_runtime_and_apps(runtime: Arc<RwLock<Runtime>>, config: Arc<Confi
                                 }
                             }
                         }
-                        Err(join_err) => error!("Can't start Tokio task '{}': {:?}", task_name, join_err)
+                        Err(join_err) => error!("Couldn't start/finish Tokio task '{}': {:?} -- thread panicked?", task_name, join_err)
                     }
                     Some(())
                 };

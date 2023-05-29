@@ -16,7 +16,7 @@ use tokio::sync::RwLock;
 use log::{debug,error};
 
 
-pub async fn async_run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn async_run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     match config.ui {
         ExtendedOption::Enabled(ui) => match ui {
             UiOptions::Console(job) => console::async_run(&job, runtime, &config).await,
@@ -27,7 +27,7 @@ pub async fn async_run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(),
     }
 }
 
-pub fn run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     match config.ui {
         ExtendedOption::Enabled(ui) => match ui {
             UiOptions::Console(job) => console::run(&job, runtime, &config),
@@ -43,14 +43,14 @@ pub fn run(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std
 }
 
 /// signals background (async Tokio) tasks that a graceful shutdown was requested
-pub async fn shutdown_tokio_services(runtime: &RwLock<Runtime>) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn shutdown_tokio_services(runtime: &RwLock<Runtime>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     debug!("Program logic is asking for a graceful shutdown...");
 
     tokio::join!(
 
         // shutdown telegram
-        Runtime::do_for_telegram_ui(runtime, |telegram_ui, _runtime| Box::pin(async move {
+        Runtime::do_for_telegram_ui(runtime, |telegram_ui| Box::pin(async move {
             if let Some(shutdown_token) = telegram_ui.shutdown_token.clone() {
                 shutdown_token.shutdown()
                     .expect("Could not shutdown Telegram")
@@ -59,14 +59,14 @@ pub async fn shutdown_tokio_services(runtime: &RwLock<Runtime>) -> Result<(), Bo
         })),
 
         // shutdown the web server
-        Runtime::do_for_web_server(runtime, |web_server, _runtime| Box::pin(async move {
+        Runtime::do_for_web_server(runtime, |web_server| Box::pin(async move {
             if let Some(shutdown_token) = web_server.shutdown_token.clone() {
                 shutdown_token.notify();
             }
         })),
 
         // shutdown socket server
-        Runtime::do_for_socket_server(runtime, |socket_server, _runtime| Box::pin(async move {
+        Runtime::do_for_socket_server(runtime, |socket_server| Box::pin(async move {
             socket_server.shutdown();
         })),
 
@@ -75,7 +75,7 @@ pub async fn shutdown_tokio_services(runtime: &RwLock<Runtime>) -> Result<(), Bo
     Ok(())
 }
 
-pub fn sync_shutdown_tokio_services(runtime: &RwLock<Runtime>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn sync_shutdown_tokio_services(runtime: &RwLock<Runtime>) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     runtime.blocking_read().tokio_runtime.as_ref().unwrap()
         .block_on(shutdown_tokio_services(runtime))
 }

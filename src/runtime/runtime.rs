@@ -10,11 +10,12 @@ use crate::{
 };
 use std::{
     sync::Arc,
-    time::{SystemTime,Duration}
+    time::{SystemTime,Duration},
+    ops::DerefMut,
 };
 use futures::future::BoxFuture;
-use log::debug;
 use tokio::sync::RwLock;
+use log::debug;
 
 /// Timeout to wait for `Option` data to be filled in -- when retrieving it
 const TIMEOUT: Duration = Duration::from_secs(3);
@@ -24,6 +25,7 @@ const POLL_INTERVAL: Duration = Duration::from_micros(1000);
 
 /// Contains data filled at runtime -- not present in the config file
 pub struct Runtime {
+
 
     // environment
     //////////////
@@ -37,6 +39,13 @@ pub struct Runtime {
     /// on this to run async tasks on sync contexts, although
     /// `futures::executor::block_on()` seems to be faster
     pub tokio_runtime: Option<Arc<tokio::runtime::Runtime>>,
+
+
+    // logic
+    ////////
+
+    // /// This is the user defined logic component to be injected / shared with other components
+    // your_logic_component: Option<YOUR_LOGIC_COMPONENT>,
 
     // internal task communication
     //////////////////////////////
@@ -53,15 +62,17 @@ pub struct Runtime {
     /// -- See [SocketServer]
     socket_server: Option<SocketServer<'static>>,
 
+
 }
 
 /// Macro to create getters & setters for `Option` fields -- with timeouts and dead-lock prevention
 macro_rules! impl_runtime {
-    ($field_name_str:    literal,
-     $field_name_ident:  ident,
-     $field_type:        ty,
-     $set_function_name: ident,
-     $get_function_name: ident) => {
+    ($field_name_str:        literal,
+     $field_name_ident:      ident,
+     $field_type:            ty,
+     $set_function_name:     ident,
+     $get_function_name:     ident,
+     $opt_get_function_name: ident) => {
 
         impl Runtime {
 
@@ -84,16 +95,16 @@ macro_rules! impl_runtime {
             ///     })).await?;
             pub async fn $get_function_name<ReturnType>
                                            (runtime:  &RwLock<Self>,
-                                            callback: impl for<'r> FnOnce(&'r $field_type, &'r Runtime) -> BoxFuture<'r, ReturnType> + Send)
+                                            callback: impl for<'r> FnOnce(&'r mut $field_type) -> BoxFuture<'r, ReturnType> + Send)
                                            -> ReturnType {
                 let mut start: Option<SystemTime> = None;
                 loop {
-                    if let Ok(runtime) = &runtime.try_read() {
-                        if let Some($field_name_ident) = &runtime.$field_name_ident {
+                    if let Ok(runtime) = &mut runtime.try_write() {
+                        if let Some($field_name_ident) = runtime.deref_mut().$field_name_ident.as_mut() {
                             if let Some(start) = start {
                                 debug!("Runtime: `{}` became available after a {:?} wait", $field_name_str, start.elapsed().unwrap());
                             }
-                            break callback(&$field_name_ident, &runtime).await
+                            break callback($field_name_ident).await
                         }
                     }
                     if let Some(_start) = start {
@@ -101,9 +112,9 @@ macro_rules! impl_runtime {
                             panic!("Could not retrieve `{}` instance: {}",
                                    $field_name_str,
                                    if let Ok(_runtime) = &runtime.try_read() {
-                                       format!("`Runtime` seems to be locked elsewhere for the past {:?}", TIMEOUT)
-                                   } else {
                                        format!("it was not registered in `Runtime` even after {:?}", TIMEOUT)
+                                   } else {
+                                       format!("`Runtime` seems to be locked elsewhere for the past {:?}", TIMEOUT)
                                 });
                         }
                     } else {
@@ -113,6 +124,20 @@ macro_rules! impl_runtime {
                     }
                     tokio::time::sleep(POLL_INTERVAL).await;
                 }
+            }
+
+            /// Similar to [$get_function_name()], but only executes callback if the value is present -- not failing if it is not.
+            pub async fn $opt_get_function_name<ReturnType>
+                                               (runtime:  &RwLock<Self>,
+                                                callback: impl for<'r> FnOnce(&'r mut $field_type) -> BoxFuture<'r, ReturnType> + Send)
+                                               -> Option<ReturnType> {
+                {
+                    let locked_runtime = &runtime.write().await;
+                    if let None = &locked_runtime.$field_name_ident {
+                        return None
+                    }
+                }
+                Some(Self::$get_function_name(runtime, callback).await)
             }
 
         }
@@ -125,6 +150,7 @@ impl Runtime {
         Self {
             executable_path,
             tokio_runtime: None,
+            // your_logic_component:    None,
             telegram_ui:   None,
             web_server:    None,
             socket_server: None,
@@ -134,6 +160,7 @@ impl Runtime {
 
 // implements getters and setters for all `Option` fields that are to be set/get asynchronously
 ///////////////////////////////////////////////////////////////////////////////////////////////
-impl_runtime!("telegram_ui",   telegram_ui,   TelegramUI,              register_telegram_ui,   do_for_telegram_ui);
-impl_runtime!("web_server",    web_server,    WebServer,               register_web_server,    do_for_web_server);
-impl_runtime!("socket_server", socket_server, SocketServer<'static>,   register_socket_server, do_for_socket_server);
+// impl_runtime!("logic_component", logic_component, YourLogicComponent,      register_LOGIC_COMPONENT, do_for_LOGIC_COMPONENT, do_if_LOGIC_COMPONENT_is_present);
+impl_runtime!("telegram_ui",     telegram_ui,     TelegramUI,              register_telegram_ui,     do_for_telegram_ui,     do_if_telegram_ui_is_present);
+impl_runtime!("web_server",      web_server,      WebServer,               register_web_server,      do_for_web_server,      do_if_web_server_is_present);
+impl_runtime!("socket_server",   socket_server,   SocketServer<'static>,   register_socket_server,   do_for_socket_server,   do_if_socket_server_is_present);

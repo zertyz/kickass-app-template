@@ -10,7 +10,7 @@ use log::{info};
 
 
 /// Runs the service this application provides
-pub async fn long_runner(_runtime: &RwLock<Runtime>, _config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn long_runner(_runtime: &RwLock<Runtime>, _config: &Config) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     info!("HERE YOU WOULD START YOUR SERVICE. For now, we'll sleep for 3 min then quit");
     tokio::time::sleep(Duration::from_secs(180)).await;
     info!("DEMO DAEMON IS OVER. Application will now shutdown gracefully");
@@ -18,7 +18,7 @@ pub async fn long_runner(_runtime: &RwLock<Runtime>, _config: &Config) -> Result
 }
 
 /// Inspects & shows the effective configs & runtime used by the application
-pub async fn check_config(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn check_config(runtime: &RwLock<Runtime>, config: &Config) -> Result<(), Box<dyn std::error::Error + Sync + Send>> {
     println!("Effective Config:  {:#?}", config);
     let runtime = runtime.read().await;
     #[derive(Debug)]
