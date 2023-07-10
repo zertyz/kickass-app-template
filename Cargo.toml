@@ -81,8 +81,8 @@ crossterm = "0.26"  # from tui's Cargo.toml
 rand      = "0.8"
 
 # GUI
-eframe      = { version = "0.21", features = ["persistence"] }   # Gives us egui, epi and web+native backends, allowing it to save & load the UI state between runs
-egui_extras = { version = "0.21", features = ["svg"] }           # Additional widgets for egui: Images, Tables, ...
+eframe      = { version = "0.22", features = ["persistence"] }   # Gives us egui, epi and web+native backends, allowing it to save & load the UI state between runs
+egui_extras = { version = "0.22", features = ["svg"] }           # Additional widgets for egui: Images, Tables, ...
 rlottie     = "0.5"                                              # Lottie animations -- depends on 'rlottie' package from AUR
 rgb         = { version = "0.8.32", default-features = false }   # for rlottie pixel format conversions
 
@@ -91,7 +91,7 @@ teloxide = { version = "0.12", features = ["macros", "auto-send"] } # telegram c
 reqwest  = { version = "0.11", features = ["cookies", "gzip"] }     # web client
 
 # web API / UI
-rocket       = { version = "0.5.0-rc.2", features = ["json"] }
+rocket       = { version = "0.5.0-rc.3", features = ["json"] }
 tokio        = { version = "1",          features = ["full", "rt-multi-thread"] }
 futures      = { version = "0.3" }
 tokio-stream = "0.1"
@@ -102,17 +102,17 @@ message-io = { version = "0.14", default-features = false, features = ["tcp"] } 
 par-stream = { version = "0.10", default-features = false, features = ["runtime-tokio"] }   # allows stream executors to process items in parallel
 
 # reactive programming
-reactive-mutiny = "0.1"
+reactive-mutiny = "1"
 
 
 # doc dependencies
 ##################
 
-ctor = { version = "0.1", optional = true }
+ctor = { version = "0.2", optional = true }
 
 
 [dev-dependencies]
-ctor          = "0.1"    # setup and teardown for test modules
+ctor          = "0.2"    # setup and teardown for test modules
 simple_logger = "4"      # a dirty console logger
 httpmock      = "0"      # allows testing integration with http services (commented out for it was causing dependency issues as of 2022-09-09)
 big-o-test    = "0.2"    # enforce algorithm's maximum allowed complexity

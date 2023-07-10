@@ -52,20 +52,18 @@ impl Egui {
 
     #[cfg(target_arch = "wasm32")]
     pub fn run_egui_web_app() -> eframe::Result<()> {
-        // Make sure panics are logged using `console.error`.
-        console_error_panic_hook::set_once();
-
-        // Redirect tracing to console.log and friends:
-        tracing_wasm::set_as_global_default();
-
+        // Redirect `log` message to `console.log` and friends:
+        eframe::WebLogger::init(log::LevelFilter::Debug).ok();
+        
         let web_options = eframe::WebOptions::default();
 
         wasm_bindgen_futures::spawn_local(async {
-            eframe::start_web(
-                "the_canvas_id", // hardcode it
-                web_options,
-                Box::new(|cc| Box::new(Self::app_creator(cc, "Web Dom", 4.4))),
-            )
+            eframe::WebRunner::new()
+                .start(
+                    "the_canvas_id", // hardcode it
+                    web_options,
+                    Box::new(|cc| Box::new(Self::app_creator(cc, "Web Dom", 4.4))),
+                )
                 .await
                 .expect("Running a web eframe");
         });

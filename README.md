@@ -15,7 +15,7 @@ Most likely, you'll need only a subset of the features provided by this template
          - [X] stateless & stateful bot examples (with navigation)
          - [X] application initiated message sending
          - [ ] messaging framework inspired on InstantVAS' Microservice pattern
-      - [X] Socket Server, with async Streams & Reactive pipelines
+      - [X] reactive-messaging with async Streams & Reactive pipelines for socket servers & clients
          - [X] Textual protocols (like FIX)
          - [ ] Binary protocols
       - [X] Hooks for your own Service
@@ -48,8 +48,9 @@ Most likely, you'll need only a subset of the features provided by this template
 # Running the default version
 
 Tested in this environment:
-   * Rust 1.67
-   * Node 19.7.0 (18.9.0 & 18.10.0 are known to mess up with Angular Universal -- more details in the link at the end)
+   * Rust 1.70
+   * Node 20.4.0 (18.9.0 & 18.10.0 are known to mess up with Angular Universal -- more details in the link at the end)
+   * Trunk v0.17.2
 
    1) Init the submodule for the `web-stats` app:
        ```git submodule update --init --remote```

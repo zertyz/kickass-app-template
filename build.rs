@@ -66,7 +66,9 @@ const PRE_RENDERED_UNIVERSAL_BUILD_COMMAND: &str = "npm run prerender";
 
 /// builds the production-ready egui for web application (note that some dependencies must be pre-installed, so running this
 /// command by hand first is a good idea)
-const EGUI_WEB_BUILD_COMMAND: &str = "~/.cargo/bin/trunk build --release";
+const EGUI_WEB_BUILD_COMMAND: &str = "export RUSTFLAGS='--cfg=web_sys_unstable_apis'; ~/.cargo/bin/trunk build --release";
+// NOTES:
+// 2023-07-11: RUSTFLAGS='--cfg=web_sys_unstable_apis' was recommended via a console message on the browser: [eframe::web::web_runner] eframe-0.22.0/src/web/web_runner.rs:34: eframe compiled without RUSTFLAGS='--cfg=web_sys_unstable_apis'. Copying text won't work.
 
 
 /// Options for Angular production building
@@ -100,7 +102,7 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=web-app/src");
-    println!("cargo:rerun-if-changed=web-egui");
+    println!("cargo:rerun-if-changed=web-egui/src");
     println!("cargo:rerun-if-changed=web-stats/src");
 }
 
