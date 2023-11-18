@@ -20,6 +20,7 @@ Most likely, you'll need only a subset of the features provided by this template
          - [ ] Binary protocols
       - [X] Hooks for your own Service
          - [X] async with `Tokio`
+      - [X] Resilient Programming enabled by `keen-retry`
    3. UIs:
       - [X] Console -- logging through `slog` with stdout and file sink options
       - [X] Terminal --  `tui` + `crossterm`;

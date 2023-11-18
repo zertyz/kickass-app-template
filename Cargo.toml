@@ -64,8 +64,8 @@ hdrhistogram      = "7.5"   # low-latency, high-range histograms
 
 # command-line parsing
 structopt    = "0.3"                                            # command line parsing
-strum        = { version = "0.24", features = ["derive"] }      # enums serialization/deserialization
-strum_macros = "0.24"
+strum        = { version = "0.25", features = ["derive"] }      # enums serialization/deserialization
+strum_macros = "0.25"
 chrono       = "0"
 
 # console UI
@@ -77,7 +77,7 @@ sloggers    = "2"
 
 # terminal UI
 tui       = { version = "0.19", features = ['crossterm'] }
-crossterm = "0.26"  # from tui's Cargo.toml
+crossterm = "0.27"  # from tui's Cargo.toml
 rand      = "0.8"
 
 # GUI
@@ -91,7 +91,7 @@ teloxide = { version = "0.12", features = ["macros", "auto-send"] } # telegram c
 reqwest  = { version = "0.11", features = ["cookies", "gzip"] }     # web client
 
 # web API / UI
-rocket       = { version = "0.5.0-rc.3", features = ["json"] }
+rocket       = { version = "0.5", features = ["json"] }
 tokio        = { version = "1",          features = ["full", "rt-multi-thread"] }
 futures      = { version = "0.3" }
 tokio-stream = "0.1"
@@ -102,7 +102,11 @@ message-io = { version = "0.14", default-features = false, features = ["tcp"] } 
 par-stream = { version = "0.10", default-features = false, features = ["runtime-tokio"] }   # allows stream executors to process items in parallel
 
 # reactive programming
-reactive-mutiny = "1"
+reactive-mutiny = "1.1.24"
+reactive-messaging = "0.2.2"
+
+# resiliency
+keen-retry = "0.3"
 
 
 # doc dependencies
