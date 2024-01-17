@@ -18,9 +18,9 @@ use tokio::sync::RwLock;
 use log::debug;
 
 /// Timeout to wait for `Option` data to be filled in -- when retrieving it
-const TIMEOUT: Duration = Duration::from_secs(3);
+const TIMEOUT: Duration = Duration::from_secs(10);
 /// Time to wait on between checks for an `Option` data to be filled in -- when retrieving it
-const POLL_INTERVAL: Duration = Duration::from_micros(1000);
+const POLL_INTERVAL: Duration = Duration::from_micros(10000);
 
 
 /// Contains data filled at runtime -- not present in the config file

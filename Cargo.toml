@@ -39,7 +39,7 @@ tcmalloc_allocator_bundled = ["tcmalloc/bundled"]       # this one uses tcmalloc
 
 # global allocators -- enabled by features -- see features.rs
 jemallocator = { version = "0.5", optional = true }
-mimalloc     = { version = "0.1", optional = true }
+mimalloc     = { version = "0.1", default-features = false, optional = true }
 tcmalloc     = { version = "0.3", default-features = false, optional = true }
 # other interesting allocators:
 # scudo - focused on heap security (prevents heap exploitation by unsafe / external code)
@@ -83,7 +83,7 @@ rand      = "0.8"
 # GUI
 eframe      = { version = "0.22", features = ["persistence"] }   # Gives us egui, epi and web+native backends, allowing it to save & load the UI state between runs
 egui_extras = { version = "0.22", features = ["svg"] }           # Additional widgets for egui: Images, Tables, ...
-rlottie     = "0.5"                                              # Lottie animations -- depends on 'rlottie' package from AUR
+#rlottie     = "0.5"                                              # Lottie animations -- depends on 'rlottie' package from AUR
 rgb         = { version = "0.8.32", default-features = false }   # for rlottie pixel format conversions
 
 # telegram UI

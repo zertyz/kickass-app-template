@@ -7,14 +7,14 @@
 mod types;
 pub use types::*;
 
-#[cfg(not(target_arch = "wasm32"))]
+/* #[cfg(not(target_arch = "wasm32"))]
 mod native_lottie_anim;
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_lottie_anim::*;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(target_arch = "wasm32")] */
 mod web_lottie_anim;
-#[cfg(target_arch = "wasm32")]
+/* #[cfg(target_arch = "wasm32")] */
 pub use web_lottie_anim::*;
 
 

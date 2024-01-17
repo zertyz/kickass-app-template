@@ -91,9 +91,9 @@ pub fn load_or_create_default(config_file_path: &str) -> Result<Config, Box<dyn 
     if result.is_ok() {
         result
     } else {
-        let error_message = result.as_ref().unwrap_err().to_string();
-        let default_config = Config::default();
-        if error_message.contains("No such file or directory") {
+        let error_message = format!("{:?}", result.as_ref().unwrap_err());
+        if error_message.contains("NotFound") {
+            let default_config = Config::default();
             save_to_file(&default_config, config_file_path)?;
             Ok(default_config)
         } else {

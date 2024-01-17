@@ -2,7 +2,7 @@
 //! as of 2022-05-12, egui is still zero-copy unfriendly, so we circumvent this performance hit by
 //! "pre-loading" all frames of the animation into bitmap buffers (textures), at the cost of increased (video) RAM usage
 //! (done in the UI thread...)
-
+/*
 
 use eframe::egui::{self, ColorImage, TextureHandle, TextureOptions, Ui};
 pub use rlottie::{Animation,Surface};
@@ -93,4 +93,4 @@ fn rlottie_bgra_to_u8_rgba(rlottie_bgra: &[BGRA8], u8_rgba: &mut [u8]) {
             rgba[2] = bgra.b;
             rgba[3] = bgra.a;
         });
-}
+}*/

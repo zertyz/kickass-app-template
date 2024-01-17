@@ -94,7 +94,7 @@ fn load_configs() -> Config {
     let program_name = std::env::args().next().expect("Program name couldn't be retrieve from args");
     let config_file = format!("{}.config.ron", program_name);
     config_ops::load_or_create_default(&config_file)
-        .expect("Could not load (or create) the configuration file")
+        .expect(&format!("Could not load (or create) the configuration file '{config_file}'"))
 }
 
 /// Builds the initial [Runtime] object, filling it with environment info & Globals.\
